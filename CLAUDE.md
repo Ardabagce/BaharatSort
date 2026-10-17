@@ -28,7 +28,7 @@ sıralama bulmacası ve kendi sunucumuzda çalışan backend'i. Altyapı VapurJa
 8. Günün bulmacası, cilalama, hata durumları
 9. Mağaza hazırlığı
 
-Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HTML üretir (aynı `shared` motoru).
+Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HTML üretir (`prototype/dist/baharat-sort.html`, aynı `shared` motoru, aynı 300 seviye). Yayımlanmış hali: https://claude.ai/artifact/BchsrPEw85FfRRVW3fhP9f (aynı dosya yolundan yeniden yayımlanır). Prototipte tüm seviyeler açık, reklamlar simülasyon; dükkân/harita henüz yok. Çizim ölçüleri (`prototype/src/art.ts`) uygulamadaki Skia çizimine taşınacak.
 
 ## Yapı
 

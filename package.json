@@ -10,11 +10,12 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r typecheck && tsc -p prototype/tsconfig.json",
     "test": "vitest run",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "levels": "pnpm --filter @baharat-sort/shared levels",
-    "balance": "pnpm --filter @baharat-sort/scripts balance"
+    "balance": "pnpm --filter @baharat-sort/scripts balance",
+    "prototype": "node prototype/build.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -27,6 +28,7 @@
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
-    "vitest": "^5.0.4"
+    "vitest": "^5.0.4",
+    "esbuild": "^0.28.2"
   }
 }

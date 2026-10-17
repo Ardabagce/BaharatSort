@@ -1,0 +1,883 @@
+<title>Baharat Sort</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Rakkas&family=Alegreya+Sans:wght@400;500;700;800&display=swap"
+/>
+<style>
+  /* Yerleşim: tek ekranlık oyun. Üstte tezgâh tabelası, ortada ahşap raflarda kavanozlar, altta bakır güçlendiriciler.
+     Tek, bilinçli bir görünüm: akşam ışığında Mısır Çarşısı (koyu tema sabit). */
+  :root {
+    --wall: #2e1c14;
+    --wall-2: #4a2c1c;
+    --wood: #8a5a33;
+    --wood-dark: #5b391f;
+    --brass: #d6a24a;
+    --brass-dark: #8d6220;
+    --cream: #fbefd9;
+    --cream-soft: #e6d2b0;
+    --ink: #2a170d;
+    --glow: #ffc46b;
+    --danger: #e0533d;
+    --leaf: #8fcc69;
+    --panel: #3a2418;
+    --panel-2: #4d3122;
+    --font-display: 'Rakkas', 'Georgia', serif;
+    --font-body: 'Alegreya Sans', 'Trebuchet MS', system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    background: var(--wall);
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-size: 16px;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  button:focus-visible {
+    outline: 3px solid var(--glow);
+    outline-offset: 2px;
+  }
+  #app {
+    position: relative;
+    height: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(255, 196, 107, 0.22), transparent 60%),
+      linear-gradient(180deg, var(--wall-2) 0%, var(--wall) 70%);
+    overflow: hidden;
+  }
+  /* Tavan kemerleri ve lambalar */
+  #ceiling {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 210px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .lamp {
+    transform-origin: 50% 0;
+    animation: sway 6s ease-in-out infinite alternate;
+  }
+  .lamp:nth-child(2) {
+    animation-duration: 7.5s;
+    animation-delay: -2s;
+  }
+  .lamp:nth-child(3) {
+    animation-duration: 5.4s;
+    animation-delay: -1s;
+  }
+  @keyframes sway {
+    from {
+      transform: rotate(-2.2deg);
+    }
+    to {
+      transform: rotate(2.2deg);
+    }
+  }
+  header {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-block: 10px 4px;
+  }
+  .sign {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+  .sign .level {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    color: var(--cream);
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  }
+  .badge {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .badge.hard {
+    background: #f07a16;
+    color: var(--ink);
+  }
+  .badge.veryHard {
+    background: var(--danger);
+    color: var(--cream);
+  }
+  .badge.relief {
+    background: rgba(143, 204, 105, 0.2);
+    color: var(--leaf);
+  }
+  .iconbtn {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 14px;
+    border: 1px solid rgba(214, 162, 74, 0.45);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.15));
+    display: grid;
+    place-items: center;
+  }
+  .iconbtn svg {
+    width: 22px;
+    height: 22px;
+  }
+  .coins {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(214, 162, 74, 0.35);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    min-width: 76px;
+  }
+  .coin {
+    width: 22px;
+    height: 22px;
+    flex: none;
+  }
+  #info {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--cream-soft);
+    opacity: 0.75;
+    min-height: 18px;
+    padding-inline: 8px;
+  }
+  #caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--glow);
+    z-index: 3;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+  #stage {
+    position: relative;
+    z-index: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding-block: 26px 64px;
+  }
+  .row {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-inline: 6px;
+  }
+  .plank {
+    position: absolute;
+    left: -4px;
+    right: -4px;
+    bottom: -12px;
+    height: 16px;
+    border-radius: 4px;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.08) 0 2px,
+        transparent 2px 38px,
+        rgba(255, 255, 255, 0.05) 38px 40px,
+        transparent 40px 90px
+      ),
+      linear-gradient(180deg, #a8713f, var(--wood) 40%, var(--wood-dark));
+    box-shadow:
+      0 6px 10px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 220, 160, 0.4);
+  }
+  .jar {
+    position: relative;
+    z-index: 1;
+    background: none;
+    border: 0;
+    padding: 0;
+    transition: transform 160ms cubic-bezier(0.3, 0.7, 0.3, 1);
+    touch-action: manipulation;
+  }
+  .jar svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .jar.lifted {
+    transform: translateY(-14px);
+  }
+  .jar.lifted .glass {
+    stroke: var(--glow);
+  }
+  .jar.hint-src .glass,
+  .jar.hint-dst .glass {
+    stroke: var(--leaf);
+    stroke-width: 3;
+  }
+  .jar.hint-src {
+    animation: nudge 0.9s ease-in-out infinite;
+  }
+  .jar.hint-dst::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -22px;
+    width: 0;
+    height: 0;
+    border: 9px solid transparent;
+    border-top-color: var(--leaf);
+    transform: translateX(-50%);
+    animation: bob 0.9s ease-in-out infinite;
+  }
+  @keyframes nudge {
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes bob {
+    50% {
+      transform: translate(-50%, 6px);
+    }
+  }
+  .grow {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: grow 330ms ease-out both;
+    animation-delay: 60ms;
+  }
+  @keyframes grow {
+    from {
+      transform: scaleY(0);
+    }
+  }
+  .cork-drop {
+    animation: cork 520ms cubic-bezier(0.25, 1.6, 0.5, 1) both;
+  }
+  @keyframes cork {
+    from {
+      transform: translateY(-46px) rotate(-14deg);
+      opacity: 0;
+    }
+    35% {
+      opacity: 1;
+    }
+  }
+  #fx {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    overflow: visible;
+  }
+  /* Tezgâh ve kedi */
+  #counter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(96px + env(safe-area-inset-bottom, 0px));
+    z-index: 0;
+    pointer-events: none;
+  }
+  #cat {
+    position: absolute;
+    left: max(14px, env(safe-area-inset-left, 0px));
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    width: 78px;
+    z-index: 2;
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+  #cat .breath {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: breathe 3.6s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    50% {
+      transform: scaleY(1.05);
+    }
+  }
+  .zz {
+    font-family: var(--font-display);
+    fill: var(--cream-soft);
+    animation: zz 3.6s ease-in-out infinite;
+  }
+  @keyframes zz {
+    0% {
+      opacity: 0;
+      transform: translate(0, 4px);
+    }
+    40% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(6px, -10px);
+    }
+  }
+  /* Güçlendiriciler */
+  #boosters {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding-block: 8px max(12px, env(safe-area-inset-bottom, 0px));
+  }
+  .boost {
+    position: relative;
+    min-height: 62px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 220, 160, 0.35);
+    background: linear-gradient(180deg, #e2b25e, var(--brass) 45%, var(--brass-dark));
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow:
+      0 4px 0 #5e3f12,
+      0 8px 14px rgba(0, 0, 0, 0.35);
+    transition:
+      transform 80ms,
+      box-shadow 80ms,
+      filter 120ms;
+  }
+  .boost:active {
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 #5e3f12,
+      0 4px 8px rgba(0, 0, 0, 0.35);
+  }
+  .boost svg {
+    width: 24px;
+    height: 24px;
+  }
+  .boost[disabled] {
+    filter: grayscale(0.85) brightness(0.7);
+    cursor: default;
+  }
+  .boost .count {
+    position: absolute;
+    top: -7px;
+    right: -5px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border-radius: 11px;
+    background: var(--panel);
+    color: var(--cream);
+    border: 1.5px solid var(--brass);
+    font-size: 12px;
+    display: grid;
+    place-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .boost .count.price {
+    background: var(--ink);
+    color: var(--glow);
+  }
+  .boost.glow {
+    animation: glow 1.1s ease-in-out infinite;
+  }
+  @keyframes glow {
+    50% {
+      box-shadow:
+        0 4px 0 #5e3f12,
+        0 0 0 6px rgba(143, 204, 105, 0.55),
+        0 0 26px rgba(143, 204, 105, 0.8);
+    }
+  }
+  /* Katmanlar: modal kartlar */
+  .veil {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(20, 10, 5, 0.66);
+    animation: fade 180ms ease-out both;
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+  .card {
+    width: min(100%, 360px);
+    max-height: 100%;
+    overflow: auto;
+    border-radius: 22px;
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(255, 196, 107, 0.18), transparent 70%),
+      linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1.5px solid rgba(214, 162, 74, 0.55);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    padding: 22px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    animation: rise 240ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(18px);
+      opacity: 0;
+    }
+  }
+  .card h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.05;
+    color: var(--glow);
+    text-wrap: balance;
+  }
+  .card p {
+    margin: 0;
+    color: var(--cream-soft);
+    line-height: 1.45;
+  }
+  .lines {
+    display: grid;
+    gap: 6px;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .lines div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .lines .total {
+    border-top: 1px solid rgba(214, 162, 74, 0.35);
+    padding-top: 6px;
+    font-weight: 800;
+    color: var(--cream);
+  }
+  .btn {
+    min-height: 50px;
+    border-radius: 15px;
+    border: 0;
+    padding: 10px 16px;
+    font-weight: 800;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn.primary {
+    background: linear-gradient(180deg, #ffd98a, var(--glow) 50%, #e39b2f);
+    color: var(--ink);
+    box-shadow: 0 4px 0 #8d5a14;
+  }
+  .btn.ad {
+    background: linear-gradient(180deg, #a6dd84, var(--leaf) 50%, #5e9c3c);
+    color: var(--ink);
+    box-shadow: 0 4px 0 #3c6a22;
+  }
+  .btn.plain {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--cream);
+    border: 1px solid rgba(214, 162, 74, 0.35);
+  }
+  .btn[disabled] {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .btn small {
+    font-weight: 600;
+    opacity: 0.75;
+  }
+  .stack {
+    display: grid;
+    gap: 10px;
+  }
+  .gift {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(143, 204, 105, 0.16);
+    color: var(--leaf);
+    font-weight: 800;
+    font-size: 13px;
+  }
+  /* Ayarlar ve seviye listesi */
+  .sheet {
+    width: min(100%, 420px);
+    text-align: left;
+  }
+  .toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 46px;
+    padding: 4px 2px;
+    border-bottom: 1px solid rgba(214, 162, 74, 0.18);
+  }
+  .toggle input {
+    width: 46px;
+    height: 26px;
+    accent-color: var(--leaf);
+  }
+  .seg {
+    display: flex;
+    gap: 4px;
+  }
+  .seg button {
+    min-width: 46px;
+    min-height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(214, 162, 74, 0.4);
+    background: transparent;
+    font-weight: 800;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--brass);
+    color: var(--ink);
+  }
+  .dev {
+    font-size: 13px;
+    color: var(--cream-soft);
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 7px;
+    max-height: 55vh;
+    overflow: auto;
+    padding: 4px;
+  }
+  .lv {
+    position: relative;
+    height: 48px;
+    border-radius: 12px;
+    border: 1px solid rgba(214, 162, 74, 0.35);
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .lv.done {
+    background: rgba(143, 204, 105, 0.16);
+    color: var(--leaf);
+  }
+  .lv.cur {
+    background: var(--glow);
+    color: var(--ink);
+  }
+  .lv.hard {
+    border-color: #f07a16;
+    border-width: 2px;
+  }
+  .lv.veryHard {
+    border-color: var(--danger);
+    border-width: 3px;
+  }
+  .sheet h3 {
+    margin: 14px 0 4px;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  /* Reklam simülatörü */
+  .adsim {
+    background: #111;
+    border: 2px dashed var(--leaf);
+  }
+  .adsim .kind {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--leaf);
+    font-weight: 800;
+  }
+  .adsim .fake {
+    height: 150px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: repeating-linear-gradient(45deg, #1d1d1d 0 12px, #262626 12px 24px);
+    color: #bbb;
+    font-weight: 700;
+  }
+  #toast {
+    position: absolute;
+    left: 50%;
+    bottom: 100px;
+    transform: translateX(-50%);
+    z-index: 30;
+    max-width: 88%;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: var(--cream);
+    color: var(--ink);
+    font-weight: 700;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    animation: rise 200ms ease-out both;
+  }
+  .foot {
+    position: absolute;
+    right: max(14px, env(safe-area-inset-right, 0px));
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    z-index: 1;
+    font-size: 11px;
+    color: var(--cream-soft);
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lamp,
+    #cat .breath,
+    .zz,
+    .hint-src,
+    .boost.glow {
+      animation: none !important;
+    }
+  }
+</style>
+
+<div id="app">
+  <svg id="ceiling" viewBox="0 0 400 210" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="lampGlow">
+        <stop offset="0" stop-color="#ffd27a" stop-opacity="0.75" />
+        <stop offset="1" stop-color="#ffb347" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="arch" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#6b4029" />
+        <stop offset="1" stop-color="#3a2317" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M0 0h400v70c-30 0-40-40-66-40s-36 40-66 40-40-44-68-44-38 44-68 44-40-40-66-40S30 70 0 70z"
+      fill="url(#arch)"
+    />
+    <path
+      d="M0 70c30 0 40-40 66-40s36 40 66 40 40-44 68-44 38 44 68 44 40-40 66-40 36 40 66 40"
+      fill="none"
+      stroke="#c78b4a"
+      stroke-opacity="0.5"
+      stroke-width="2"
+    />
+    <g>
+      <g class="lamp">
+        <line x1="70" y1="40" x2="70" y2="92" stroke="#2a170d" stroke-width="1.4" />
+        <circle cx="70" cy="112" r="52" fill="url(#lampGlow)" />
+        <path
+          d="M58 92h24l6 14-10 14h-16l-10-14z"
+          fill="#c84a3a"
+          stroke="#d6a24a"
+          stroke-width="1.6"
+        />
+        <path d="M62 120h16l-8 10z" fill="#d6a24a" />
+        <path d="M58 92l12-6 12 6" fill="#d6a24a" />
+      </g>
+      <g class="lamp">
+        <line x1="200" y1="26" x2="200" y2="70" stroke="#2a170d" stroke-width="1.4" />
+        <circle cx="200" cy="92" r="60" fill="url(#lampGlow)" />
+        <path
+          d="M186 70h28l7 16-12 16h-18l-12-16z"
+          fill="#2f8f7a"
+          stroke="#d6a24a"
+          stroke-width="1.6"
+        />
+        <path d="M191 102h18l-9 11z" fill="#d6a24a" />
+        <path d="M186 70l14-7 14 7" fill="#d6a24a" />
+      </g>
+      <g class="lamp">
+        <line x1="330" y1="40" x2="330" y2="96" stroke="#2a170d" stroke-width="1.4" />
+        <circle cx="330" cy="116" r="50" fill="url(#lampGlow)" />
+        <path
+          d="M319 96h22l5 13-9 13h-14l-9-13z"
+          fill="#e0a12e"
+          stroke="#d6a24a"
+          stroke-width="1.6"
+        />
+        <path d="M323 122h14l-7 9z" fill="#d6a24a" />
+        <path d="M319 96l11-6 11 6" fill="#d6a24a" />
+      </g>
+    </g>
+  </svg>
+
+  <header>
+    <button class="iconbtn" id="btnLevels" aria-label="Seviyeler">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
+        <path d="M4 6h16M4 12h16M4 18h10" />
+      </svg>
+    </button>
+    <div class="sign">
+      <span class="level" id="levelTitle">Seviye 1</span>
+      <span id="levelBadge"></span>
+    </div>
+    <div class="coins" id="coins" aria-live="polite">
+      <svg class="coin" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="11" fill="#b8862e" />
+        <circle cx="12" cy="12" r="8.5" fill="#e6b85a" stroke="#8d6220" stroke-width="1" />
+        <path
+          d="M12 6.5l1.6 3.4 3.7.4-2.8 2.5.8 3.7L12 14.6l-3.3 1.9.8-3.7-2.8-2.5 3.7-.4z"
+          fill="#8d6220"
+        />
+      </svg>
+      <span id="coinCount">0</span>
+    </div>
+    <button class="iconbtn" id="btnRestart" aria-label="Baştan başla">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
+        <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5" />
+      </svg>
+    </button>
+    <button class="iconbtn" id="btnSettings" aria-label="Ayarlar">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"
+        />
+      </svg>
+    </button>
+  </header>
+  <div id="info"></div>
+
+  <main id="stage" aria-label="Tezgâh"></main>
+
+  <nav id="boosters"></nav>
+
+  <svg id="counter" viewBox="0 0 400 96" preserveAspectRatio="none" aria-hidden="true">
+    <rect y="8" width="400" height="88" fill="#6b4226" />
+    <rect y="4" width="400" height="8" fill="#a8713f" />
+    <rect y="12" width="400" height="3" fill="#3a2317" opacity="0.5" />
+  </svg>
+  <button id="cat" aria-label="Kedi">
+    <svg viewBox="0 0 120 64">
+      <ellipse cx="60" cy="60" rx="46" ry="4" fill="#000" opacity="0.25" />
+      <g class="breath">
+        <path
+          d="M18 58c-4-22 14-34 40-34 24 0 40 10 42 26 1 6-3 8-8 8H24c-4 0-6 0-6 0z"
+          fill="#e2a25c"
+        />
+        <path
+          d="M40 30c6 4 8 10 6 16M60 26c5 5 6 12 3 18M78 30c4 5 4 11 1 16"
+          stroke="#b8763a"
+          stroke-width="4"
+          fill="none"
+          stroke-linecap="round"
+        />
+        <path
+          d="M96 52c10 0 14-6 10-12"
+          stroke="#e2a25c"
+          stroke-width="7"
+          fill="none"
+          stroke-linecap="round"
+        />
+      </g>
+      <g>
+        <path d="M10 58c-6-10 0-24 14-24s18 12 14 24z" fill="#e8ad68" />
+        <path d="M12 38l2-12 8 9zM30 35l6-10 2 12z" fill="#e8ad68" />
+        <path d="M14 36l2-6 4 4zM31 33l3-5 1 6z" fill="#f5c9a0" />
+        <path
+          d="M16 46q3 2 6 0M28 46q3 2 6 0"
+          stroke="#5b391f"
+          stroke-width="1.6"
+          fill="none"
+          stroke-linecap="round"
+        />
+        <circle cx="25" cy="50" r="1.4" fill="#c46a5a" />
+      </g>
+      <text class="zz" x="40" y="22" font-size="13">z</text>
+    </svg>
+  </button>
+  <div class="foot" id="foot"></div>
+  <svg id="fx" aria-hidden="true"></svg>
+</div>
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <defs id="patterns"></defs>
+</svg>
+<script>
+  /*__SCRIPT__*/
+</script>
