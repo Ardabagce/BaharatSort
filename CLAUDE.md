@@ -20,7 +20,7 @@ sıralama bulmacası ve kendi sunucumuzda çalışan backend'i. Altyapı VapurJa
 0. VapurJam incelemesi → `docs/from-vapurjam.md` ✅
 1. Monorepo iskeleti (pnpm: app, server, shared, scripts), lint/format, vitest, CI ✅
 2. `shared`: kural motoru, üretici, çözücü, testler, 300 seviye → `docs/levels.md` ✅
-3. Ekonomi config'i + denge simülasyonu → `docs/balance-report.md` (onay bekler)
+3. Ekonomi config'i + denge simülasyonu → `docs/balance-report.md` ✅ (Arda'nın onayını bekliyor)
 4. `app`: oynanabilir çekirdek (döküm animasyonu, ses, titreşim, kazanma/kilitlenme, renk körü, reklam simülatörü)
 5. Seviye haritası, dükkân/dekorasyon, günlük hediye, güçlendiriciler
 6. `server`: API, DB, events, admin stats, Dockerfile, statik sayfalar
@@ -78,7 +78,7 @@ pnpm balance      # denge simülasyonu → docs/balance-report.md
 - Zorluk eşikleri config'ten gelir ama gömülü seviyeler build anında üretilir; uzaktan değişiklik yalnızca sunucunun ürettiği yeni paketleri ve günün bulmacasını etkiler. Çalışma anında etkili olan eşik: `stuckHintAfter`.
 - **Takılınca:** aynı seviyede 3 kilitlenme → sonraki denemede ipucu düğmesi parlar, bir ipucu ücretsiz. Seviye zorluğu gizlice düşürülmez.
 
-## Ekonomi (`shared/src/config.ts`, `economy.ts`) — taslak, 3. aşamada simülasyonla ayarlanacak
+## Ekonomi (`shared/src/config.ts`, `economy.ts`) — simülasyonla ayarlandı, rapor `docs/balance-report.md` (Arda'nın onayını bekliyor)
 
 Para birimi **Akçe**. Başlangıç 50 akçe + her güçlendiriciden 3 hak.
 
@@ -105,9 +105,21 @@ Hak bitince: akçe **ya da** ödüllü reklam. Öğe tanıtılırken hediye: giz
 uzun → 2 geri al, dar → 1 ipucu + 1 geri al.
 
 **Dükkânlar:** Mısır Çarşısı → Kapalıçarşı → Kadıköy Çarşısı → Eminönü İskele Tezgâhı → Adalar Bakkalı.
-Her dükkânda 9 parça (tabela, tezgâh, raflar, terazi, lambalar, halı, kedi yatağı, vitrin, kavanoz seti),
-her parça 3 stil: ilk stil parçayla gelir, diğerleri parça fiyatının %50'si (akçe birikmesin diye kalıcı harcama yeri).
-Sonraki dükkân, öncekinin 9 parçası alınınca açılır. Eksik akçe 30'dan azsa "eksiği reklamla tamamla".
+Her dükkânda 9 parça (tabela, tezgâh, raflar, terazi, lambalar, halı, kedi yatağı, vitrin, kavanoz seti).
+Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
+
+| Dükkân  | Parça fiyatları (akçe)     | Toplam |
+| ------- | -------------------------- | -----: |
+| Mısır   | 45 50 50 55 60 60 65 65 70 |    520 |
+| Kapalı  | 50 50 55 55 60 65 65 70 70 |    540 |
+| Kadıköy | 50 55 60 60 65 70 70 75 75 |    580 |
+| Eminönü | 55 60 60 65 70 70 75 80 85 |    625 |
+| Adalar  | 60 60 65 70 75 75 80 85 90 |    660 |
+
+- Her parça 3 stil: ilk stil parçayla gelir, diğer ikisi **parça fiyatı × 1,2**. Ek stiller, 5 dükkân bittikten sonra (~140. seviye) akçenin kalıcı harcama yeri; simülasyonda bu olmadan sık reklam izleyen 3.900 akçe biriktiriyordu.
+- **Akçe reklamı sınırı:** akçe veren ödüllü reklamlar ("2x al", "eksiği tamamla") günde en fazla 14. Güçlendirici ve "son bir şans" reklamları sınırsız (akçe vermezler). Sınır olmadan sık izleyen %68 hızlanıyordu (hedef %40–60).
+- Eksik akçe 30'dan azsa "eksiği reklamla tamamla".
+- **Simülasyon sonucu (reklamsız):** ~5,8 seviyede bir güçlendirici, 3,1 seviyede bir parça, dükkân başına 23–32 seviye, sık izleyen %46 hızlı, en yüksek bakiye 100.
 
 ## Reklam kuralları (`shared/src/adPolicy.ts`, testli)
 

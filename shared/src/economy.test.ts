@@ -4,6 +4,8 @@ import {
   buyDecoration,
   buyStyle,
   claimDailyGift,
+  coinAdsLeft,
+  noteCoinAd,
   completeDaily,
   completeLevel,
   defaultProgress,
@@ -76,6 +78,16 @@ describe('güçlendiriciler', () => {
   });
 });
 
+describe('akçe reklamı sınırı', () => {
+  it('günde en fazla coinAdsPerDay, ertesi gün sıfırlanır', () => {
+    let p = fresh();
+    const cap = cfg.economy.coinAdsPerDay;
+    for (let i = 0; i < cap; i++) p = noteCoinAd(p, '2026-10-17');
+    expect(coinAdsLeft(p, cfg, '2026-10-17')).toBe(0);
+    expect(coinAdsLeft(p, cfg, '2026-10-18')).toBe(cap);
+  });
+});
+
 describe('günlük hediye', () => {
   it('art arda girişte artar, 7 günde döner, en fazla 50', () => {
     let p = fresh();
@@ -108,13 +120,13 @@ describe('günlük hediye', () => {
 });
 
 describe('dekorasyon', () => {
-  it('parça alınır, ikinci kez alınmaz; ek stil yarı fiyat', () => {
+  it('parça alınır, ikinci kez alınmaz; ek stil parça fiyatı × oran', () => {
     let p: Progress = { ...fresh(), coins: 200 };
     p = buyDecoration(p, cfg, 'misir', 'sign')!;
-    expect(p.coins).toBe(170);
+    expect(p.coins).toBe(200 - 45);
     expect(buyDecoration(p, cfg, 'misir', 'sign')).toBeNull();
     p = buyStyle(p, cfg, 'misir', 'sign', 2)!;
-    expect(p.coins).toBe(155);
+    expect(p.coins).toBe(200 - 45 - Math.round(45 * cfg.economy.extraStyleRatio));
     expect(p.owned[itemKey('misir', 'sign')]).toEqual({ styles: [0, 2], selected: 2 });
   });
 

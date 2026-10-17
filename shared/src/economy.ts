@@ -35,6 +35,8 @@ export interface Progress {
   stuck: { level: number; count: number };
   /** Bir sonraki denemede ücretsiz ipucu hazır. */
   freeHint: boolean;
+  /** Bugün izlenen akçe reklamları (günlük sınır için). */
+  coinAds: { date: string | null; count: number };
 }
 
 export function defaultProgress(cfg: GameConfig): Progress {
@@ -52,6 +54,7 @@ export function defaultProgress(cfg: GameConfig): Progress {
     weeksClaimed: [],
     stuck: { level: 0, count: 0 },
     freeHint: false,
+    coinAds: { date: null, count: 0 },
   };
 }
 
@@ -145,6 +148,17 @@ export function giveIntroGift(
   let next: Progress = { ...p, introGifts: [...p.introGifts, feature] };
   for (const k of BOOSTERS) if (gift[k]) next = grantBooster(next, k, gift[k]);
   return { progress: next, gift };
+}
+
+/** Bugün daha akçe reklamı ("2x al", "eksiği tamamla") teklif edilebilir mi. */
+export function coinAdsLeft(p: Progress, cfg: GameConfig, today: string): number {
+  const used = p.coinAds.date === today ? p.coinAds.count : 0;
+  return Math.max(0, cfg.economy.coinAdsPerDay - used);
+}
+
+export function noteCoinAd(p: Progress, today: string): Progress {
+  const count = p.coinAds.date === today ? p.coinAds.count + 1 : 1;
+  return { ...p, coinAds: { date: today, count } };
 }
 
 // --- Günlük hediye ------------------------------------------------------------------------------
@@ -375,6 +389,13 @@ export function parseProgress(raw: string | null | undefined, cfg: GameConfig): 
           ? v.stuck
           : d.stuck,
       freeHint: v.freeHint === true,
+      coinAds:
+        v.coinAds && typeof v.coinAds.count === 'number'
+          ? {
+              date: typeof v.coinAds.date === 'string' ? v.coinAds.date : null,
+              count: int(v.coinAds.count, 0),
+            }
+          : d.coinAds,
     };
   } catch {
     return d;

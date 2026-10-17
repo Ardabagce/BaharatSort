@@ -43,6 +43,11 @@ export interface EconomyConfig {
   introGift: Record<string, Partial<Record<BoosterKind, number>>>;
   /** Eksik akçe bu miktardan azsa "reklamla tamamla" teklif edilir. */
   topUpAdMax: number;
+  /**
+   * Akçe veren ödüllü reklamların ("2x al" ve "eksiği tamamla") günlük üst sınırı. Güçlendirici ve
+   * "son bir şans" reklamları bu sınıra girmez. Sık reklam izleyenin ekonomiyi kırmaması için.
+   */
+  coinAdsPerDay: number;
   /** Ek stil fiyatı = parça fiyatı × bu oran. */
   extraStyleRatio: number;
   shops: ShopConfig[];
@@ -118,13 +123,14 @@ export const DEFAULT_CONFIG: GameConfig = {
       narrow: { hint: 1, undo: 1 },
     },
     topUpAdMax: 30,
-    extraStyleRatio: 0.5,
+    coinAdsPerDay: 14,
+    extraStyleRatio: 1.2,
     shops: [
-      { id: 'misir', items: items([30, 35, 40, 40, 45, 45, 50, 55, 60]) },
-      { id: 'kapali', items: items([45, 50, 55, 55, 60, 60, 65, 70, 80]) },
-      { id: 'kadikoy', items: items([55, 60, 65, 70, 70, 75, 80, 85, 95]) },
-      { id: 'eminonu', items: items([65, 70, 75, 80, 85, 90, 95, 100, 110]) },
-      { id: 'adalar', items: items([75, 80, 90, 95, 100, 105, 110, 120, 130]) },
+      { id: 'misir', items: items([45, 50, 50, 55, 60, 60, 65, 65, 70]) },
+      { id: 'kapali', items: items([50, 50, 55, 55, 60, 65, 65, 70, 70]) },
+      { id: 'kadikoy', items: items([50, 55, 60, 60, 65, 70, 70, 75, 75]) },
+      { id: 'eminonu', items: items([55, 60, 60, 65, 70, 70, 75, 80, 85]) },
+      { id: 'adalar', items: items([60, 60, 65, 70, 75, 75, 80, 85, 90]) },
     ],
   },
   ads: {
