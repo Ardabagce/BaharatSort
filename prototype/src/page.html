@@ -69,6 +69,66 @@
       linear-gradient(180deg, var(--wall-2) 0%, var(--wall) 70%);
     overflow: hidden;
   }
+  /* Dükkânın içi: arka plan sahnesi */
+  #scene {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  #scene svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .walker {
+    animation: walk 16s linear infinite;
+  }
+  .walker.w2 {
+    animation-duration: 23s;
+    animation-delay: -9s;
+    animation-direction: reverse;
+  }
+  @keyframes walk {
+    0% {
+      transform: translateX(-70px);
+    }
+    100% {
+      transform: translateX(110px);
+    }
+  }
+  #props {
+    position: absolute;
+    right: max(10px, env(safe-area-inset-right, 0px));
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    width: 104px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  #props svg {
+    display: block;
+    width: 100%;
+    overflow: visible;
+  }
+  .steam {
+    animation: steam 3.2s ease-in-out infinite;
+  }
+  .steam.s2 {
+    animation-delay: -1.6s;
+  }
+  @keyframes steam {
+    0% {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    40% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
   /* Tavan kemerleri ve lambalar */
   #ceiling {
     position: absolute;
@@ -697,6 +757,8 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .lamp,
+    .walker,
+    .steam,
     #cat .breath,
     .zz,
     .hint-src,
@@ -707,6 +769,7 @@
 </style>
 
 <div id="app">
+  <div id="scene"></div>
   <svg id="ceiling" viewBox="0 0 400 210" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
     <defs>
       <radialGradient id="lampGlow">
@@ -872,7 +935,7 @@
       <text class="zz" x="40" y="22" font-size="13">z</text>
     </svg>
   </button>
-  <div class="foot" id="foot"></div>
+  <div id="props"></div>
   <svg id="fx" aria-hidden="true"></svg>
 </div>
 <svg width="0" height="0" style="position: absolute" aria-hidden="true">

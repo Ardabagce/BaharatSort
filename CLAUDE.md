@@ -131,6 +131,8 @@ Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
 
 ## Kararlar
 
+- **Arka plan (Arda, 17 Ekim 2026: "arka plan çok boş, Mısır Çarşısı / Kapalıçarşı dükkânı içi gibi olsun, biz ön tarafta ayırıyormuşuz gibi"):** `prototype/src/scene.ts`. Arkada dükkânın içi: İznik çini şeridi, tavandan sarkan kuru biber/patlıcan/sarımsak/lif kabağı dizileri, kavanoz-teneke-lokum kutusu dolu raflar, çarşı koridoruna açılan kemerli kapı (gelip geçenler), tepsilerde fiyat çubuklu konik baharat yığınları, çuvallar. Ön tezgâhta kedi, bakır terazi, buharı tüten çay bardağı. Oyun alanının ortası koyulaştırılır ki kavanozlar net okunsun. Uygulamada Skia'ya taşınacak; ileride dükkân seçimine (Kapalıçarşı, Kadıköy…) göre sahne değişecek.
+
 - **Repo:** `Ardabagce/BaharatSort` (**public**). Geliştirme dalı `claude/sweet-sagan-r89olv`.
 - **Paket yöneticisi:** pnpm 10, Node 22, `node-linker=hoisted` (Expo/Metro monorepo). VapurJam'le aynı.
 - **Expo SDK 58** (29 Eylül 2026, "güncel SDK"). VapurJam 57'de.

@@ -50,6 +50,7 @@ import {
   unlock,
   vibrate,
 } from './audio';
+import { propsSVG, sceneSVG } from './scene';
 import { getLang, setLang, t, type Lang } from './strings';
 
 const cfg = DEFAULT_CONFIG;
@@ -164,7 +165,6 @@ function renderHeader() {
   $('info').textContent = settings.showInfo
     ? t('info', { d: lv.stats.difficulty, m: lv.stats.minMoves, j: lv.jars.length })
     : '';
-  $('foot').textContent = t('foot');
   $('btnLevels').setAttribute('aria-label', t('levels'));
   $('btnSettings').setAttribute('aria-label', t('settings'));
   $('btnRestart').setAttribute('aria-label', t('restart'));
@@ -944,7 +944,7 @@ function openSettings() {
     <h2>${t('settings')}</h2>
     ${tog('sound', t('sound'))}${tog('music', t('music'))}${tog('haptics', t('haptics'))}${tog('colorblind', t('colorblind'))}
     <div class="toggle"><span>${t('language')}</span><div class="seg"><button id="lTr" aria-pressed="${settings.lang === 'tr'}">TR</button><button id="lEn" aria-pressed="${settings.lang === 'en'}">EN</button></div></div>
-    <h3>${t('dev')}</h3>
+    <h3>${t('dev')}</h3><p>${t('foot')}</p>
     ${tog('showInfo', t('showInfo'))}${tog('adFail', t('adFail'))}
     <div class="dev">${t('devCounters', { s: ads.session, l: ads.levelsSinceLast, h: hour, d: lastDecision })}</div>
     <div class="stack">
@@ -1030,6 +1030,8 @@ function openLevels() {
 // --- Açılış --------------------------------------------------------------------------------------
 
 document.getElementById('patterns')!.innerHTML = patternDefs();
+$('scene').innerHTML = sceneSVG();
+$('props').innerHTML = propsSVG();
 $('btnSettings').addEventListener('click', () => {
   unlock();
   openSettings();
