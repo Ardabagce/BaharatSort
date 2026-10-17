@@ -22,7 +22,7 @@ CC-BY-SA dosyaların değiştirilmiş hâli de CC-BY-SA'dır).
 | `spice_turmeric.jpg` | [Ground yellow turmeric](https://commons.wikimedia.org/wiki/File:Ground_yellow_turmeric.jpg)     | Selimee          | CC BY-SA 4.0 |
 | `spice_chili.jpg`    | [Redchiliflakes.jpg](https://commons.wikimedia.org/wiki/File:Redchiliflakes.jpg)                 | Myscha Theriault | CC BY 2.0    |
 
-`bg_bazaar.jpg` kırpıldı, bulanıklaştırıldı, karartıldı. Baharat dokuları kırpılıp 192 px'e küçültüldü ve dikişsiz yapıldı.
+`bg_bazaar.jpg` kırpıldı, bulanıklaştırıldı, karartıldı. Baharat dokuları kırpılıp 192 px'e küçültüldü ve dikişsiz yapıldı. `spice_sumac.jpg` çarşıdaki kırmızı yığından alındı ve sumak bordosuna yeniden tonlandı.
 
 ## Sesler (OpenGameArt, hepsi CC0)
 
