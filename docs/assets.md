@@ -16,10 +16,11 @@ CC-BY-SA dosyaların değiştirilmiş hâli de CC-BY-SA'dır).
 
 ## Baharat fotoğrafları (Wikimedia Commons)
 
-| Dosya             | Kaynak                                                                                           | Yazar            | Lisans    |
-| ----------------- | ------------------------------------------------------------------------------------------------ | ---------------- | --------- |
-| `bg_bazaar.jpg`   | [Spice Bazaar, Istanbul 2](https://commons.wikimedia.org/wiki/File:Spice_Bazaar,_Istanbul_2.jpg) | Joseolgon        | CC BY 4.0 |
-| `spice_chili.jpg` | [Redchiliflakes.jpg](https://commons.wikimedia.org/wiki/File:Redchiliflakes.jpg)                 | Myscha Theriault | CC BY 2.0 |
+| Dosya                | Kaynak                                                                                           | Yazar            | Lisans       |
+| -------------------- | ------------------------------------------------------------------------------------------------ | ---------------- | ------------ |
+| `bg_bazaar.jpg`      | [Spice Bazaar, Istanbul 2](https://commons.wikimedia.org/wiki/File:Spice_Bazaar,_Istanbul_2.jpg) | Joseolgon        | CC BY 4.0    |
+| `spice_turmeric.jpg` | [Ground yellow turmeric](https://commons.wikimedia.org/wiki/File:Ground_yellow_turmeric.jpg)     | Selimee          | CC BY-SA 4.0 |
+| `spice_chili.jpg`    | [Redchiliflakes.jpg](https://commons.wikimedia.org/wiki/File:Redchiliflakes.jpg)                 | Myscha Theriault | CC BY 2.0    |
 
 `bg_bazaar.jpg` kırpıldı, bulanıklaştırıldı, karartıldı. Baharat dokuları kırpılıp 192 px'e küçültüldü ve dikişsiz yapıldı.
 
