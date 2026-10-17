@@ -41,10 +41,10 @@ export interface EconomyConfig {
   startBoosters: Record<BoosterKind, number>;
   /** Yeni öğe tanıtılırken hediye edilen güçlendiriciler. */
   introGift: Record<string, Partial<Record<BoosterKind, number>>>;
-  /** Eksik akçe bu miktardan azsa "reklamla tamamla" teklif edilir. */
+  /** Eksik altın bu miktardan azsa "reklamla tamamla" teklif edilir. */
   topUpAdMax: number;
   /**
-   * Akçe veren ödüllü reklamların ("2x al" ve "eksiği tamamla") günlük üst sınırı. Güçlendirici ve
+   * Altın veren ödüllü reklamların ("2x al" ve "eksiği tamamla") günlük üst sınırı. Güçlendirici ve
    * "son bir şans" reklamları bu sınıra girmez. Sık reklam izleyenin ekonomiyi kırmaması için.
    */
   coinAdsPerDay: number;

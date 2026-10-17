@@ -53,8 +53,8 @@ import type { Profile } from './profiles';
  * zorluğuyla artar. Hatadan sonra plan yeniden hesaplanır; çözüm kalmadıysa oyuncu kilitlenmiş sayılır.
  *
  * Kilitlenince sıra: geri al hakkı → boş kavanoz hakkı → karıştır hakkı → (reklam profili kabul
- * ederse) "son bir şans" ödüllü reklamı → akçesi yetiyorsa ve dekorasyon birikimini çok bozmuyorsa
- * akçeyle geri al → seviyeyi baştan dene. Aynı seviyede 3 kilitlenme ücretsiz ipucu açar.
+ * ederse) "son bir şans" ödüllü reklamı → altını yetiyorsa ve dekorasyon birikimini çok bozmuyorsa
+ * altınla geri al → seviyeyi baştan dene. Aynı seviyede 3 kilitlenme ücretsiz ipucu açar.
  */
 
 export interface SimOptions {
@@ -72,7 +72,7 @@ export interface SimOptions {
   sessionsPerDay: number;
   /** Günün bulmacasını bitirme olasılığı (her gün). */
   dailyPuzzleRate: number;
-  /** Akçeyle güçlendirici alma eğilimi (kilitlenince, akçe yetiyorsa). */
+  /** Altınla güçlendirici alma eğilimi (kilitlenince, altın yetiyorsa). */
   buyBoosterRate: number;
   /** Dekorasyon alırken elde bırakılan yedek (güçlendirici için). */
   reserve: number;
@@ -300,7 +300,7 @@ export function simulatePlayer(
         r.boostersByKind.extraJar++;
         return { session: sessionAddJar(s), kind: 'extraJar' };
       }
-      // 3) Akçeyle geri al (eğilim + akçe yetiyorsa)
+      // 3) Altınla geri al (eğilim + altın yetiyorsa)
       if (s.history.length && rng() < opt.buyBoosterRate) {
         const paid = payBooster(p, cfg, 'undo');
         if (paid) {

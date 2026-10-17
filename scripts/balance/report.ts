@@ -146,7 +146,7 @@ export function checks(s: ProfileSummary[], cfg: GameConfig): Check[] {
       ok: speedup >= 0.4 && speedup <= 0.6,
     },
     {
-      label: 'En yüksek akçe bakiyesi (tüm profiller)',
+      label: 'En yüksek altın bakiyesi (tüm profiller)',
       target: '< 1000',
       value: String(maxCoins),
       ok: maxCoins < 1000,
@@ -188,11 +188,11 @@ export function renderReport(
   const row = (label: string, f: (s: ProfileSummary) => string) =>
     L.push(`| ${label} | ${sums.map(f).join(' | ')} |`);
   row('Oyun süresi (300 seviye)', (s) => `${f1(s.hours)} sa`);
-  row('Seviye başına kazanç', (s) => `${f1(s.earnPerLevel)} akçe`);
-  row('Seviye başına harcama', (s) => `${f1(s.spendPerLevel)} akçe`);
+  row('Seviye başına kazanç', (s) => `${f1(s.earnPerLevel)} altın`);
+  row('Seviye başına harcama', (s) => `${f1(s.spendPerLevel)} altın`);
   row('Güçlendirici / seviye', (s) => s.boostersPerLevel.toFixed(2));
   row('… haktan', (s) => f1(s.bySource.charge));
-  row('… akçeyle', (s) => f1(s.bySource.coins));
+  row('… altınla', (s) => f1(s.bySource.coins));
   row('… reklamla', (s) => f1(s.bySource.ad));
   row(
     'Geri al / boş kavanoz / karıştır',
@@ -216,7 +216,7 @@ export function renderReport(
       `| ${k} | ${sums.map((s) => pct(s.firstTryByKind[k] ?? 0)).join(' | ')} | ${f1(sums[0]!.attemptsByKind[k] ?? 0)} |`,
     );
   L.push('');
-  L.push('### 50 seviyelik bloklarda akçe (seviye başına ort.)', '');
+  L.push('### 50 seviyelik bloklarda altın (seviye başına ort.)', '');
   L.push(
     '| Seviyeler | ' +
       sums.map((s) => `${s.profile.label}: kazanç / harcama / bakiye`).join(' | ') +
@@ -241,20 +241,20 @@ export function renderReport(
   L.push(difficultySvg(levels), '');
   L.push('## Değerler', '');
   L.push(
-    `- Seviye ödülü: normal ${cfg.economy.levelReward.normal}, zor ${cfg.economy.levelReward.hard}, çok zor ${cfg.economy.levelReward.veryHard}; geri almadan +${cfg.economy.noUndoBonus}. Başlangıç ${cfg.economy.startCoins} akçe.`,
+    `- Seviye ödülü: normal ${cfg.economy.levelReward.normal}, zor ${cfg.economy.levelReward.hard}, çok zor ${cfg.economy.levelReward.veryHard}; geri almadan +${cfg.economy.noUndoBonus}. Başlangıç ${cfg.economy.startCoins} altın.`,
     `- Güçlendiriciler: geri al ${cfg.economy.boosterPrice.undo}, boş kavanoz ${cfg.economy.boosterPrice.extraJar}, ipucu ${cfg.economy.boosterPrice.hint}, karıştır ${cfg.economy.boosterPrice.shuffle}. Başlangıçta her birinden ${cfg.economy.startBoosters.undo} hak.`,
     `- Günlük hediye: ${cfg.economy.dailyGift.join(', ')}. Günün bulmacası ${cfg.economy.dailyPuzzleReward}.`,
-    `- Akçe veren ödüllü reklam ("2x al", "eksiği tamamla") günde en fazla ${cfg.economy.coinAdsPerDay}. Eksik ${cfg.economy.topUpAdMax} akçeden azsa tamamlama teklifi.`,
-    `- Dekorasyon: ${cfg.economy.shops.map((s) => `${s.id} ${s.items.reduce((a, i) => a + i.price, 0)}`).join(', ')} akçe (9 parça); ek stil = parça fiyatı × ${cfg.economy.extraStyleRatio}.`,
+    `- Altın veren ödüllü reklam ("2x al", "eksiği tamamla") günde en fazla ${cfg.economy.coinAdsPerDay}. Eksik ${cfg.economy.topUpAdMax} altınden azsa tamamlama teklifi.`,
+    `- Dekorasyon: ${cfg.economy.shops.map((s) => `${s.id} ${s.items.reduce((a, i) => a + i.price, 0)}`).join(', ')} altın (9 parça); ek stil = parça fiyatı × ${cfg.economy.extraStyleRatio}.`,
     '',
   );
   L.push('## Varsayımlar', '');
   L.push(
     '- Oyuncu botu çözücünün planını izler; her hamlede `0,03 + 0,035 × zorluk` olasılıkla rastgele anlamlı bir döküm yapar (hata). Hatadan sonra plan yeniden hesaplanır; çözüm kalmadıysa kilitlenmiş sayılır.',
-    '- Kilitlenince sıra: geri al / boş kavanoz / karıştır hakkı → (reklam profili kabul ederse) "son bir şans" reklamı → %60 olasılıkla akçesi yetiyorsa akçeyle geri al → baştan dene.',
-    '- Dekorasyon: her seviye sonunda en ucuz eksik parça alınır; güçlendirici hakları bittiyse 60 akçe yedek tutulur. Tüm parçalar bitince ek stiller alınır.',
+    '- Kilitlenince sıra: geri al / boş kavanoz / karıştır hakkı → (reklam profili kabul ederse) "son bir şans" reklamı → %60 olasılıkla altını yetiyorsa altınla geri al → baştan dene.',
+    '- Dekorasyon: her seviye sonunda en ucuz eksik parça alınır; güçlendirici hakları bittiyse 60 altın yedek tutulur. Tüm parçalar bitince ek stiller alınır.',
     "- Süre: hamle 2,4 sn, deneme başına 10 sn, seviye arası 14 sn, ödüllü reklam 30 sn, geçiş reklamı 15 sn. Oturum 18 dk, günde 2 oturum; günün bulmacası günlerin %60'ında.",
-    '- "Reklam izleme oranı" her ödüllü fırsat için ayrı ayrı uygulanır (2x, son şans, günlük hediye 2x, eksik akçe).',
+    '- "Reklam izleme oranı" her ödüllü fırsat için ayrı ayrı uygulanır (2x, son şans, günlük hediye 2x, eksik altın).',
     '',
   );
   void PROFILES;

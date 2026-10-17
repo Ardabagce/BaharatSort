@@ -10,7 +10,7 @@ sıralama bulmacası ve kendi sunucumuzda çalışan backend'i. Altyapı VapurJa
 - Aşamalarla ilerle. Her aşama sonunda çalışır durumda commit + push ve kısa bir "ne test etmeliyim" notu.
 - Belirsiz kararlarda mantıklı varsayılanı seç, aşağıdaki **Kararlar** bölümüne yaz, devam et. Yalnızca geri dönüşü zor kararlarda sor.
 - API anahtarı, sertifika, `.p8`/`.p12`, provisioning profile, şifre ya da `.env` **asla** repoya girmez. Değer istenmez; yalnızca secret **isimleri** yazılır. **Repo public**: bu kural iki kat önemli.
-- Harici telifli asset yok. Her şey Skia/SVG ile kodla çizilir, sesler koddan sentezlenir.
+- Telifli asset yok. **Ücretsiz lisanslı asset kullanılabilir** (Arda, 17 Ekim 2026: "ücretsiz güzel assetler bul, daha otantik olsun, baharatlar daha gerçekçi"): önce CC0 / kamu malı, gerekirse CC-BY (oyun içinde ve `docs/assets.md`'de atıfla). Her dosyanın kaynağı, yazarı ve lisansı `docs/assets.md`'ye yazılır. Kalanı Skia/SVG ile kodla çizilir, sesler koddan sentezlenir.
 - Kişisel veri yok: login yok, yalnızca cihazda üretilen anonim UUID.
 - Kodda sabit ekonomi/reklam/zorluk sayısı yok: hepsi `shared/src/config.ts` › `DEFAULT_CONFIG`, sunucu `/config` ile ezer.
 - Push öncesi `pnpm check` temiz geçmeli.
@@ -80,9 +80,9 @@ pnpm balance      # denge simülasyonu → docs/balance-report.md
 
 ## Ekonomi (`shared/src/config.ts`, `economy.ts`) — simülasyonla ayarlandı, rapor `docs/balance-report.md` (Arda'nın onayını bekliyor)
 
-Para birimi **Akçe**. Başlangıç 50 akçe + her güçlendiriciden 3 hak.
+Para birimi **Altın** (EN: **Gold**). Arda, 17 Ekim 2026: "Akçe ismini değiştirelim, altın olsun". Kodda `coins`. Başlangıç 50 altın + her güçlendiriciden 3 hak.
 
-| Kazanç                     | Akçe                                            |
+| Kazanç                     | Altın                                           |
 | -------------------------- | ----------------------------------------------- |
 | Normal / eğitici / rahat.  | 10                                              |
 | Zor (her 5.)               | 25                                              |
@@ -94,21 +94,21 @@ Para birimi **Akçe**. Başlangıç 50 akçe + her güçlendiriciden 3 hak.
 | Günün bulmacası            | 40 + haftada 7/7 olunca özel dekorasyon parçası |
 | Tekrar oynanan seviye      | 0                                               |
 
-| Güçlendirici      | Akçe | Not                   |
-| ----------------- | ---: | --------------------- |
-| Geri al (3 hamle) |   30 |                       |
-| Boş kavanoz +1    |   80 | yalnızca o seviye     |
-| İpucu             |   40 | çözücüden gelir       |
-| Karıştır          |   60 | yalnızca kilitlenince |
+| Güçlendirici      | Altın | Not                   |
+| ----------------- | ----: | --------------------- |
+| Geri al (3 hamle) |    30 |                       |
+| Boş kavanoz +1    |    80 | yalnızca o seviye     |
+| İpucu             |    40 | çözücüden gelir       |
+| Karıştır          |    60 | yalnızca kilitlenince |
 
-Hak bitince: akçe **ya da** ödüllü reklam. Öğe tanıtılırken hediye: gizli → 2 ipucu, kilit → 1 boş kavanoz,
+Hak bitince: altın **ya da** ödüllü reklam. Öğe tanıtılırken hediye: gizli → 2 ipucu, kilit → 1 boş kavanoz,
 uzun → 2 geri al, dar → 1 ipucu + 1 geri al.
 
 **Dükkânlar:** Mısır Çarşısı → Kapalıçarşı → Kadıköy Çarşısı → Eminönü İskele Tezgâhı → Adalar Bakkalı.
 Her dükkânda 9 parça (tabela, tezgâh, raflar, terazi, lambalar, halı, kedi yatağı, vitrin, kavanoz seti).
 Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
 
-| Dükkân  | Parça fiyatları (akçe)     | Toplam |
+| Dükkân  | Parça fiyatları (altın)    | Toplam |
 | ------- | -------------------------- | -----: |
 | Mısır   | 45 50 50 55 60 60 65 65 70 |    520 |
 | Kapalı  | 50 50 55 55 60 65 65 70 70 |    540 |
@@ -116,9 +116,9 @@ Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
 | Eminönü | 55 60 60 65 70 70 75 80 85 |    625 |
 | Adalar  | 60 60 65 70 75 75 80 85 90 |    660 |
 
-- Her parça 3 stil: ilk stil parçayla gelir, diğer ikisi **parça fiyatı × 1,2**. Ek stiller, 5 dükkân bittikten sonra (~140. seviye) akçenin kalıcı harcama yeri; simülasyonda bu olmadan sık reklam izleyen 3.900 akçe biriktiriyordu.
-- **Akçe reklamı sınırı:** akçe veren ödüllü reklamlar ("2x al", "eksiği tamamla") günde en fazla 14. Güçlendirici ve "son bir şans" reklamları sınırsız (akçe vermezler). Sınır olmadan sık izleyen %68 hızlanıyordu (hedef %40–60).
-- Eksik akçe 30'dan azsa "eksiği reklamla tamamla".
+- Her parça 3 stil: ilk stil parçayla gelir, diğer ikisi **parça fiyatı × 1,2**. Ek stiller, 5 dükkân bittikten sonra (~140. seviye) altının kalıcı harcama yeri; simülasyonda bu olmadan sık reklam izleyen 3.900 altın biriktiriyordu.
+- **Altın reklamı sınırı:** altın veren ödüllü reklamlar ("2x al", "eksiği tamamla") günde en fazla 14. Güçlendirici ve "son bir şans" reklamları sınırsız (altın vermezler). Sınır olmadan sık izleyen %68 hızlanıyordu (hedef %40–60).
+- Eksik altın 30'dan azsa "eksiği reklamla tamamla".
 - **Simülasyon sonucu (reklamsız):** ~5,8 seviyede bir güçlendirici, 3,1 seviyede bir parça, dükkân başına 23–32 seviye, sık izleyen %46 hızlı, en yüksek bakiye 100.
 
 ## Reklam kuralları (`shared/src/adPolicy.ts`, testli)
@@ -126,7 +126,7 @@ Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
 - Interstitial yalnızca seviye **kazanıldıktan** sonra, ödül ekranı kapanırken. Seviye ortasında ya da kayıptan sonra asla.
 - İlk 8 seviyede ve ilk oyun oturumunda hiç. En fazla her 3 seviyede bir, aralarında en az 120 sn. Son 3 dk'da ödüllü izlendiyse atla (seviye sayacı da sıfırlanır). Saatte en fazla 6.
 - Uzak ayar bu kuralları **sıkılaştırabilir ama gevşetemez** (`mergeConfig`): bunlar Arda'nın koyduğu üst sınırlar.
-- Ödüllü: 2x akçe, son bir şans (+1 boş kavanoz), güçlendirici, günlük hediye 2x, eksik akçe. Yüklenemezse "Şu an reklam yok", ödül verilmez, akçeyle alma seçeneği gösterilir.
+- Ödüllü: 2x altın, son bir şans (+1 boş kavanoz), güçlendirici, günlük hediye 2x, eksik altın. Yüklenemezse "Şu an reklam yok", ödül verilmez, altınla alma seçeneği gösterilir.
 - Banner yalnızca ana menü / dükkân altında. App open reklamı yok.
 
 ## Kararlar

@@ -606,7 +606,7 @@ function renderBoosters() {
   }
 }
 
-/** Hakkı varsa kullanır; yoksa akçe / reklam seçeneği. Uygulanırsa true. */
+/** Hakkı varsa kullanır; yoksa altın / reklam seçeneği. Uygulanırsa true. */
 async function tryBooster(k: BoosterKind): Promise<boolean> {
   if (busy) return false;
   if (k === 'hint' && progress.freeHint) {
@@ -804,8 +804,8 @@ function stuck() {
     <h2>${t('stuckTitle')}</h2><p>${t('stuckBody')}</p>
     <div class="stack">
       <button class="btn ad" id="sAd">${t('stuckAd')}</button>
-      <button class="btn primary" id="sShuffle">${t('stuckShuffle')} <small>· ${sh > 0 ? sh : `${cfg.economy.boosterPrice.shuffle} akçe`}</small></button>
-      <button class="btn plain" id="sUndo" ${canUndo(session) ? '' : 'disabled'}>${t('stuckUndo')} <small>· ${progress.boosters.undo > 0 ? progress.boosters.undo : `${cfg.economy.boosterPrice.undo} akçe`}</small></button>
+      <button class="btn primary" id="sShuffle">${t('stuckShuffle')} <small>· ${sh > 0 ? sh : `${cfg.economy.boosterPrice.shuffle} ${t('gold')}`}</small></button>
+      <button class="btn plain" id="sUndo" ${canUndo(session) ? '' : 'disabled'}>${t('stuckUndo')} <small>· ${progress.boosters.undo > 0 ? progress.boosters.undo : `${cfg.economy.boosterPrice.undo} ${t('gold')}`}</small></button>
       <button class="btn plain" id="sRestart">${t('restart')}</button>
     </div></div>`);
   v.querySelector('#sAd')!.addEventListener('click', async () => {

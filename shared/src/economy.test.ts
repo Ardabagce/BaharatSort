@@ -51,7 +51,7 @@ describe('güçlendiriciler', () => {
     expect(fresh().boosters).toEqual({ undo: 3, extraJar: 3, hint: 3, shuffle: 3 });
   });
 
-  it('hak bitince null, akçeyle ödeme fiyatı düşer', () => {
+  it('hak bitince null, altınla ödeme fiyatı düşer', () => {
     let p: Progress = { ...fresh(), boosters: { undo: 0, extraJar: 1, hint: 0, shuffle: 0 } };
     expect(useBooster(p, 'undo')).toBeNull();
     p = useBooster(p, 'extraJar')!;
@@ -78,7 +78,7 @@ describe('güçlendiriciler', () => {
   });
 });
 
-describe('akçe reklamı sınırı', () => {
+describe('altın reklamı sınırı', () => {
   it('günde en fazla coinAdsPerDay, ertesi gün sıfırlanır', () => {
     let p = fresh();
     const cap = cfg.economy.coinAdsPerDay;
@@ -138,7 +138,7 @@ describe('dekorasyon', () => {
     expect(p.activeShop).toBe('kapali');
   });
 
-  it('eksik akçe 30dan azsa reklamla tamamlama teklif edilir', () => {
+  it('eksik altın 30dan azsa reklamla tamamlama teklif edilir', () => {
     const p = { ...fresh(), coins: 40 };
     expect(topUpShortfall(p, cfg, 60)).toBe(20);
     expect(topUpShortfall(p, cfg, 80)).toBeNull();
@@ -147,7 +147,7 @@ describe('dekorasyon', () => {
 });
 
 describe('günün bulmacası', () => {
-  it('40 akçe, aynı gün bir kez; haftada 7 olunca özel parça', () => {
+  it('40 altın, aynı gün bir kez; haftada 7 olunca özel parça', () => {
     let p = fresh();
     const week = [
       '2026-10-12',

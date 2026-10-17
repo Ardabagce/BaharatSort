@@ -4,25 +4,25 @@
 
 ## Özet
 
-| Hedef                                   | İstenen            | Sonuç                  |     |
-| --------------------------------------- | ------------------ | ---------------------- | :-: |
-| Reklamsız oyuncu güçlendirici sıklığı   | her 4–6 seviyede 1 | her 5.8 seviyede 1     | ✅  |
-| Dekorasyon parçası sıklığı (reklamsız)  | ~3 seviyede 1      | 3.1 seviyede 1         | ✅  |
-| Dükkân başına seviye (reklamsız)        | 25–30              | 23 / 26 / 29 / 29 / 32 | ✅  |
-| Sık izleyenin hızlanması (5 dükkân)     | %40–60             | %46                    | ✅  |
-| En yüksek akçe bakiyesi (tüm profiller) | < 1000             | 100                    | ✅  |
-| Saatlik geçiş reklamı (en yüksek)       | ≤ 6                | 5.5                    | ✅  |
+| Hedef                                    | İstenen            | Sonuç                  |     |
+| ---------------------------------------- | ------------------ | ---------------------- | :-: |
+| Reklamsız oyuncu güçlendirici sıklığı    | her 4–6 seviyede 1 | her 5.8 seviyede 1     | ✅  |
+| Dekorasyon parçası sıklığı (reklamsız)   | ~3 seviyede 1      | 3.1 seviyede 1         | ✅  |
+| Dükkân başına seviye (reklamsız)         | 25–30              | 23 / 26 / 29 / 29 / 32 | ✅  |
+| Sık izleyenin hızlanması (5 dükkân)      | %40–60             | %46                    | ✅  |
+| En yüksek altın bakiyesi (tüm profiller) | < 1000             | 100                    | ✅  |
+| Saatlik geçiş reklamı (en yüksek)        | ≤ 6                | 5.5                    | ✅  |
 
 ## Profiller
 
 |                                  | Reklam izlemeyen | Ara sıra izleyen (%30) | Sık izleyen (%70) |
 | -------------------------------- | ---------------: | ---------------------: | ----------------: |
 | Oyun süresi (300 seviye)         |          11.0 sa |                10.7 sa |           11.2 sa |
-| Seviye başına kazanç             |        21.6 akçe |              27.7 akçe |         33.1 akçe |
-| Seviye başına harcama            |        21.8 akçe |              27.8 akçe |         33.3 akçe |
+| Seviye başına kazanç             |       21.6 altın |             27.7 altın |        33.1 altın |
+| Seviye başına harcama            |       21.8 altın |             27.8 altın |        33.3 altın |
 | Güçlendirici / seviye            |             0.17 |                   0.24 |              0.27 |
 | … haktan                         |             13.0 |                   13.0 |              13.0 |
-| … akçeyle                        |             38.4 |                   22.6 |              10.2 |
+| … altınla                        |             38.4 |                   22.6 |              10.2 |
 | … reklamla                       |              0.0 |                   36.0 |              57.4 |
 | Geri al / boş kavanoz / karıştır | 44.4 / 4.0 / 3.0 |      28.6 / 40.0 / 3.0 | 16.2 / 61.4 / 3.0 |
 | Dükkân tamam: misir              |               23 |                     19 |                14 |
@@ -46,7 +46,7 @@
 | hard     |              %54 |                    %59 |               %57 |                     3.6 |
 | veryHard |              %55 |                    %55 |               %60 |                     2.2 |
 
-### 50 seviyelik bloklarda akçe (seviye başına ort.)
+### 50 seviyelik bloklarda altın (seviye başına ort.)
 
 | Seviyeler | Reklam izlemeyen: kazanç / harcama / bakiye | Ara sıra izleyen (%30): kazanç / harcama / bakiye | Sık izleyen (%70): kazanç / harcama / bakiye |
 | --------- | ------------------------------------------: | ------------------------------------------------: | -------------------------------------------: |
@@ -128,16 +128,16 @@ Testere dişi: her 5. seviye zor, her 20. çok zor, ardından rahatlatıcı.
 
 ## Değerler
 
-- Seviye ödülü: normal 10, zor 25, çok zor 60; geri almadan +5. Başlangıç 50 akçe.
+- Seviye ödülü: normal 10, zor 25, çok zor 60; geri almadan +5. Başlangıç 50 altın.
 - Güçlendiriciler: geri al 30, boş kavanoz 80, ipucu 40, karıştır 60. Başlangıçta her birinden 3 hak.
 - Günlük hediye: 10, 15, 20, 25, 30, 40, 50. Günün bulmacası 40.
-- Akçe veren ödüllü reklam ("2x al", "eksiği tamamla") günde en fazla 14. Eksik 30 akçeden azsa tamamlama teklifi.
-- Dekorasyon: misir 520, kapali 540, kadikoy 580, eminonu 620, adalar 660 akçe (9 parça); ek stil = parça fiyatı × 1.2.
+- Altın veren ödüllü reklam ("2x al", "eksiği tamamla") günde en fazla 14. Eksik 30 altınden azsa tamamlama teklifi.
+- Dekorasyon: misir 520, kapali 540, kadikoy 580, eminonu 620, adalar 660 altın (9 parça); ek stil = parça fiyatı × 1.2.
 
 ## Varsayımlar
 
 - Oyuncu botu çözücünün planını izler; her hamlede `0,03 + 0,035 × zorluk` olasılıkla rastgele anlamlı bir döküm yapar (hata). Hatadan sonra plan yeniden hesaplanır; çözüm kalmadıysa kilitlenmiş sayılır.
-- Kilitlenince sıra: geri al / boş kavanoz / karıştır hakkı → (reklam profili kabul ederse) "son bir şans" reklamı → %60 olasılıkla akçesi yetiyorsa akçeyle geri al → baştan dene.
-- Dekorasyon: her seviye sonunda en ucuz eksik parça alınır; güçlendirici hakları bittiyse 60 akçe yedek tutulur. Tüm parçalar bitince ek stiller alınır.
+- Kilitlenince sıra: geri al / boş kavanoz / karıştır hakkı → (reklam profili kabul ederse) "son bir şans" reklamı → %60 olasılıkla altını yetiyorsa altınla geri al → baştan dene.
+- Dekorasyon: her seviye sonunda en ucuz eksik parça alınır; güçlendirici hakları bittiyse 60 altın yedek tutulur. Tüm parçalar bitince ek stiller alınır.
 - Süre: hamle 2,4 sn, deneme başına 10 sn, seviye arası 14 sn, ödüllü reklam 30 sn, geçiş reklamı 15 sn. Oturum 18 dk, günde 2 oturum; günün bulmacası günlerin %60'ında.
-- "Reklam izleme oranı" her ödüllü fırsat için ayrı ayrı uygulanır (2x, son şans, günlük hediye 2x, eksik akçe).
+- "Reklam izleme oranı" her ödüllü fırsat için ayrı ayrı uygulanır (2x, son şans, günlük hediye 2x, eksik altın).

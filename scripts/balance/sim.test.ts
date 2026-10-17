@@ -23,7 +23,7 @@ describe('denge simülasyonu', () => {
     );
   });
 
-  it('akçe bakiyesi hiç negatife düşmez, her seviye biter', () => {
+  it('altın bakiyesi hiç negatife düşmez, her seviye biter', () => {
     const r = simulatePlayer(first, DEFAULT_CONFIG, PROFILES[2]!, 'z');
     expect(r.levels).toHaveLength(40);
     expect(r.levels.every((l) => l.coinsAfter >= 0)).toBe(true);

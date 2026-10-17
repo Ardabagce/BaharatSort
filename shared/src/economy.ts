@@ -35,7 +35,7 @@ export interface Progress {
   stuck: { level: number; count: number };
   /** Bir sonraki denemede ücretsiz ipucu hazır. */
   freeHint: boolean;
-  /** Bugün izlenen akçe reklamları (günlük sınır için). */
+  /** Bugün izlenen altın reklamları (günlük sınır için). */
   coinAds: { date: string | null; count: number };
 }
 
@@ -112,7 +112,7 @@ export function consumeFreeHint(p: Progress): Progress {
   return { ...p, freeHint: false, stuck: { ...p.stuck, count: 0 } };
 }
 
-// --- Akçe ve güçlendiriciler -------------------------------------------------------------------
+// --- Altın ve güçlendiriciler -------------------------------------------------------------------
 
 export function addCoins(p: Progress, amount: number): Progress {
   return { ...p, coins: p.coins + Math.max(0, Math.floor(amount)) };
@@ -126,13 +126,13 @@ export function grantBooster(p: Progress, kind: BoosterKind, count = 1): Progres
   return { ...p, boosters: { ...p.boosters, [kind]: p.boosters[kind] + count } };
 }
 
-/** Hakkı varsa kullanır; yoksa null (çağıran akçe ya da reklam teklif eder). */
+/** Hakkı varsa kullanır; yoksa null (çağıran altın ya da reklam teklif eder). */
 export function useBooster(p: Progress, kind: BoosterKind): Progress | null {
   if (p.boosters[kind] <= 0) return null;
   return { ...p, boosters: { ...p.boosters, [kind]: p.boosters[kind] - 1 } };
 }
 
-/** Akçeyle doğrudan kullanım (hak bitince): fiyat düşer, hak eklenmez. */
+/** Altınla doğrudan kullanım (hak bitince): fiyat düşer, hak eklenmez. */
 export function payBooster(p: Progress, cfg: GameConfig, kind: BoosterKind): Progress | null {
   return spendCoins(p, cfg.economy.boosterPrice[kind]);
 }
@@ -150,7 +150,7 @@ export function giveIntroGift(
   return { progress: next, gift };
 }
 
-/** Bugün daha akçe reklamı ("2x al", "eksiği tamamla") teklif edilebilir mi. */
+/** Bugün daha altın reklamı ("2x al", "eksiği tamamla") teklif edilebilir mi. */
 export function coinAdsLeft(p: Progress, cfg: GameConfig, today: string): number {
   const used = p.coinAds.date === today ? p.coinAds.count : 0;
   return Math.max(0, cfg.economy.coinAdsPerDay - used);
@@ -270,7 +270,7 @@ export function selectStyle(p: Progress, shop: string, item: string, style: numb
   return { ...p, owned: { ...p.owned, [key]: { ...owned, selected: style } } };
 }
 
-/** Eksik akçe `topUpAdMax`'tan azsa "eksiği reklamla tamamla" teklif edilir; miktarı döner. */
+/** Eksik altın `topUpAdMax`'tan azsa "eksiği reklamla tamamla" teklif edilir; miktarı döner. */
 export function topUpShortfall(p: Progress, cfg: GameConfig, price: number): number | null {
   const short = price - p.coins;
   return short > 0 && short < cfg.economy.topUpAdMax ? short : null;

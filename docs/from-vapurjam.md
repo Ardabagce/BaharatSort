@@ -59,7 +59,7 @@ metinler tamamen yeni; VapurJam'den oyun içeriği taşınmaz.
   olunca "Şu an reklam yok" + jetonla alma seçeneği gösterilir, ödül verilmez (VapurJam yalnızca Alert gösteriyordu).
 - **Reklam simülatörü:** VapurJam'in mock'u yalnızca Expo Go'da devreye giriyordu. Burada `__DEV__`
   derlemelerinde de seçilebilir; sahte tam ekran reklam + "yüklenemedi" senaryosu + sayaç paneli (debug menüsü).
-- Ödüllü reklam yerleri genişliyor: 2x akçe, son bir şans, güçlendirici, günlük hediye 2x, eksik akçe.
+- Ödüllü reklam yerleri genişliyor: 2x altın, son bir şans, güçlendirici, günlük hediye 2x, eksik altın.
 - Reklam kimlikleri: VapurJam `app.config.ts`'te kendi gerçek birimlerini varsayılan olarak tutuyor.
   Baharat Sort'ta henüz AdMob birimi yok; **varsayılan Google test birimleri**, gerçekleri GitHub
   Variables'tan (aynı adlar: `ADMOB_IOS_APP_ID`, `ADMOB_IOS_BANNER_ID`, `ADMOB_IOS_INTERSTITIAL_ID`,
@@ -79,7 +79,7 @@ Bu desen sayesinde kayıt/yükleme testleri React Native'siz Vitest'te koşuyor.
   (MMKV, Expo Go'da yok, development build ister). Varsayılan karar: ince bir `kv` arayüzü
   (`getString/setString`), native derlemede `react-native-mmkv`, Expo Go'da AsyncStorage.
   Böylece hem istenen MMKV hem Expo Go'da hızlı deneme korunur. İlerleme şeması yeni
-  (akçe, güçlendirici hakları, dükkânlar, dekorasyon stilleri, kilitlenme sayaçları…), `schemaVersion` alanı eklenir.
+  (altın, güçlendirici hakları, dükkânlar, dekorasyon stilleri, kilitlenme sayaçları…), `schemaVersion` alanı eklenir.
 - Takma ad (`nicknameFor`) alınmıyor: skor tablosu yok.
 
 ## 3. i18n
