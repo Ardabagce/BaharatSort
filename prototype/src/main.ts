@@ -50,6 +50,7 @@ import {
   unlock,
   vibrate,
 } from './audio';
+import { mapHTML } from './map';
 import { propsSVG, sceneSVG } from './scene';
 import { getLang, setLang, t, type Lang } from './strings';
 
@@ -745,51 +746,51 @@ function win() {
   sfxWin();
   if (settings.haptics) vibrate([20, 60, 20, 60, 40]);
   confetti();
-  setTimeout(
-    () => {
-      let doubled = false;
-      const lines = r.first
-        ? `<div><span>${t('reward')}</span><span>+${r.base}</span></div>${r.bonus ? `<div><span>${t('bonus')}</span><span>+${r.bonus}</span></div>` : ''}<div class="total"><span>${t('total')}</span><span id="wTotal">+${r.base + r.bonus}</span></div>`
-        : `<div><span>${t('replay')}</span><span>+0</span></div>`;
-      const v = veil(`<div class="card">
+  setTimeout(() => showWinCard(r), reduced ? 200 : 900);
+}
+
+/** Ödül ekranı kapanırken: interstitial kuralı, sonra sonraki seviye. */
+async function goNextLevel() {
+  closeVeil();
+  const d = decideInterstitial(cfg.ads, ads, levelN, Date.now());
+  lastDecision = d.show ? 'göster' : d.reason;
+  if (d.show) {
+    if (await interstitialAd()) ads = onInterstitialShown(ads, Date.now());
+  } else if (d.reason === 'rewarded-grace') {
+    ads = onInterstitialSkipped(ads);
+    toast(t('interSkipped'));
+  }
+  persist();
+  startLevel(Math.min(BUILTIN_LEVELS.length, levelN + 1));
+}
+
+function showWinCard(r: { first: boolean; base: number; bonus: number }) {
+  const lines = r.first
+    ? `<div><span>${t('reward')}</span><span>+${r.base}</span></div>${r.bonus ? `<div><span>${t('bonus')}</span><span>+${r.bonus}</span></div>` : ''}<div class="total"><span>${t('total')}</span><span>+${r.base + r.bonus}</span></div>`
+    : `<div><span>${t('replay')}</span><span>+0</span></div>`;
+  const v = veil(`<div class="card">
       <h2>${t('winTitle')}</h2><p>${t('winBody')}</p>
       <div class="lines">${lines}</div>
       <div class="stack">
         ${r.first && r.base > 0 ? `<button class="btn ad" id="wAd">${t('doubleAd')}</button>` : ''}
         <button class="btn primary" id="wNext">${t('next')}</button>
       </div></div>`);
+  bumpCoins();
+  v.querySelector('#wAd')?.addEventListener('click', async () => {
+    // Reklam penceresi kartın yerini alır; sonuca göre ya sonraki seviyeye geçilir ya kart geri gelir.
+    const res = await rewardedAd();
+    if (res === 'rewarded') {
+      progress = doubleReward(progress, cfg, r.base);
+      persist();
       bumpCoins();
-      v.querySelector('#wAd')?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget as HTMLButtonElement;
-        if (doubled) return;
-        const res = await rewardedAd();
-        if (res === 'rewarded') {
-          doubled = true;
-          progress = doubleReward(progress, cfg, r.base);
-          persist();
-          bumpCoins();
-          btn.disabled = true;
-          const tot = v.querySelector('#wTotal');
-          if (tot) tot.textContent = `+${r.base * cfg.economy.adRewardMultiplier + r.bonus}`;
-        } else if (res === 'unavailable') toast(t('noAdPlain'));
-      });
-      v.querySelector('#wNext')!.addEventListener('click', async () => {
-        closeVeil();
-        // Interstitial yalnızca burada: seviye kazanıldı, ödül ekranı kapanıyor.
-        const d = decideInterstitial(cfg.ads, ads, levelN, Date.now());
-        lastDecision = d.show ? 'göster' : d.reason;
-        if (d.show) {
-          if (await interstitialAd()) ads = onInterstitialShown(ads, Date.now());
-        } else if (d.reason === 'rewarded-grace') {
-          ads = onInterstitialSkipped(ads);
-          toast(t('interSkipped'));
-        }
-        persist();
-        startLevel(Math.min(BUILTIN_LEVELS.length, levelN + 1));
-      });
-    },
-    reduced ? 200 : 900,
-  );
+      toast(t('doubled', { n: r.base * (cfg.economy.adRewardMultiplier - 1) }));
+      await goNextLevel();
+      return;
+    }
+    showWinCard(r);
+    if (res === 'unavailable') toast(t('noAdPlain'));
+  });
+  v.querySelector('#wNext')!.addEventListener('click', () => void goNextLevel());
 }
 
 function stuck() {
@@ -1005,26 +1006,27 @@ function openSettings() {
 }
 
 function openLevels() {
-  const items = BUILTIN_LEVELS.map((l) => {
-    const cls = [
-      'lv',
-      l.n < progress.unlocked ? 'done' : '',
-      l.n === levelN ? 'cur' : '',
-      l.kind === 'hard' || l.kind === 'veryHard' ? l.kind : '',
-    ].join(' ');
-    return `<button class="${cls}" data-n="${l.n}" aria-label="${t('level', { n: l.n })}">${l.n}</button>`;
-  }).join('');
-  const v = veil(`<div class="card sheet"><h2>${t('levels')}</h2><p>${t('levelsNote')}</p>
-    <div class="grid" id="lvGrid">${items}</div>
-    <button class="btn primary" id="lvClose">${t('close')}</button></div>`);
-  v.querySelector('#lvGrid')!.addEventListener('click', (e) => {
+  closeVeil();
+  const v = document.createElement('div');
+  v.className = 'map';
+  v.id = 'veil';
+  v.innerHTML = `<div class="map-head"><button class="iconbtn" id="lvClose" aria-label="${t('close')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="map-title"><span>${t('levels')}</span><small>${t('levelsNote')}</small></div></div><div class="map-scroll" id="lvScroll"></div>`;
+  app.appendChild(v);
+  const scroll = v.querySelector<HTMLElement>('#lvScroll')!;
+  scroll.innerHTML = mapHTML(
+    BUILTIN_LEVELS,
+    scroll.clientWidth,
+    progress.unlocked,
+    levelN,
+    getLang(),
+  );
+  scroll.addEventListener('click', (e) => {
     const n = Number((e.target as HTMLElement).closest<HTMLElement>('[data-n]')?.dataset.n);
     if (n) startLevel(n);
   });
   v.querySelector('#lvClose')!.addEventListener('click', closeVeil);
-  const grid = v.querySelector<HTMLElement>('#lvGrid')!;
-  const cur = v.querySelector<HTMLElement>('.cur');
-  if (cur) grid.scrollTop = cur.offsetTop - grid.offsetTop - grid.clientHeight / 2;
+  const cur = scroll.querySelector<HTMLElement>('.node.cur');
+  if (cur) scroll.scrollTop = cur.offsetTop - scroll.clientHeight / 2;
 }
 
 // --- Açılış --------------------------------------------------------------------------------------

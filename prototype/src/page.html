@@ -279,16 +279,10 @@
     right: -4px;
     bottom: -12px;
     height: 16px;
-    border-radius: 4px;
+    border-radius: 3px;
     background:
-      repeating-linear-gradient(
-        90deg,
-        rgba(0, 0, 0, 0.08) 0 2px,
-        transparent 2px 38px,
-        rgba(255, 255, 255, 0.05) 38px 40px,
-        transparent 40px 90px
-      ),
-      linear-gradient(180deg, #a8713f, var(--wood) 40%, var(--wood-dark));
+      linear-gradient(180deg, rgba(255, 210, 150, 0.25), rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.35)),
+      url(__ASSET:wood_shelf.jpg__) 0 0 / 256px 64px;
     box-shadow:
       0 6px 10px rgba(0, 0, 0, 0.45),
       inset 0 1px 0 rgba(255, 220, 160, 0.4);
@@ -383,6 +377,12 @@
     height: calc(96px + env(safe-area-inset-bottom, 0px));
     z-index: 0;
     pointer-events: none;
+    border-top: 6px solid transparent;
+    border-image: linear-gradient(180deg, #c48a4f, #7a4a26) 1;
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45)),
+      url(__ASSET:wood_counter.jpg__) 0 0 / 300px 300px;
+    box-shadow: 0 -6px 14px rgba(0, 0, 0, 0.45);
   }
   #cat {
     position: absolute;
@@ -708,6 +708,168 @@
     text-transform: uppercase;
     color: var(--brass);
   }
+  /* Seviye haritası: sıva duvar üstünde çarşı yolu */
+  .map {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(20, 10, 5, 0.55),
+        rgba(20, 10, 5, 0.25) 30%,
+        rgba(20, 10, 5, 0.6)
+      ),
+      url(__ASSET:plaster.jpg__) 0 0 / 384px 384px;
+    animation: fade 180ms ease-out both;
+  }
+  .map-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px max(14px, env(safe-area-inset-right, 0px)) 10px
+      max(14px, env(safe-area-inset-left, 0px));
+    background: url(__ASSET:wood_shelf.jpg__) center / cover;
+    box-shadow:
+      inset 0 -3px 0 rgba(0, 0, 0, 0.35),
+      0 6px 14px rgba(0, 0, 0, 0.45);
+  }
+  .map-title {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .map-title span {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+  }
+  .map-title small {
+    font-size: 12px;
+    color: var(--cream-soft);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  .map-scroll {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .map-inner {
+    position: relative;
+  }
+  .map-path {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .street {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 230px;
+    padding: 6px 16px 7px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #2457a0, #173f7c);
+    border: 3px solid #f4f1ea;
+    outline: 2px solid #173f7c;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+    color: #f4f1ea;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    font-family: var(--font-body);
+  }
+  .street .district {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    opacity: 0.85;
+  }
+  .street .sname {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  .street .range {
+    font-size: 11px;
+    opacity: 0.8;
+  }
+  .node {
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 0;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    background: radial-gradient(circle at 35% 30%, #ffe3a0, #d6a24a 45%, #8d6220 100%);
+    box-shadow:
+      0 0 0 3px #5e3f12,
+      0 6px 10px rgba(0, 0, 0, 0.55),
+      inset 0 -4px 6px rgba(0, 0, 0, 0.25);
+  }
+  .node .num {
+    text-shadow: 0 1px 0 rgba(255, 240, 200, 0.6);
+  }
+  .node.locked {
+    background: radial-gradient(circle at 35% 30%, #8a7a68, #5c4e40 60%, #3b3128);
+    color: #d8ccb8;
+  }
+  .node.locked .num {
+    text-shadow: none;
+  }
+  .node.next {
+    background: radial-gradient(circle at 35% 30%, #fff3d0, #f2c46b 50%, #c9871e);
+  }
+  .node.cur {
+    box-shadow:
+      0 0 0 3px #fff3d0,
+      0 0 0 7px rgba(255, 196, 107, 0.45),
+      0 0 26px rgba(255, 196, 107, 0.9);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% {
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+  }
+  .node.veryHard {
+    width: 64px;
+    height: 64px;
+    box-shadow:
+      0 0 0 3px #7a1b16,
+      0 0 0 6px #d3352b,
+      0 6px 12px rgba(0, 0, 0, 0.55);
+  }
+  .node.hard {
+    box-shadow:
+      0 0 0 3px #b8520a,
+      0 6px 10px rgba(0, 0, 0, 0.55);
+  }
+  .chili {
+    position: absolute;
+    right: -8px;
+    top: -10px;
+    display: flex;
+  }
+  .chili svg {
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+  }
+  .chili.two svg + svg {
+    margin-left: -10px;
+  }
   /* Reklam simülatörü */
   .adsim {
     background: #111;
@@ -762,7 +924,8 @@
     #cat .breath,
     .zz,
     .hint-src,
-    .boost.glow {
+    .boost.glow,
+    .node.cur {
       animation: none !important;
     }
   }
@@ -891,11 +1054,7 @@
 
   <nav id="boosters"></nav>
 
-  <svg id="counter" viewBox="0 0 400 96" preserveAspectRatio="none" aria-hidden="true">
-    <rect y="8" width="400" height="88" fill="#6b4226" />
-    <rect y="4" width="400" height="8" fill="#a8713f" />
-    <rect y="12" width="400" height="3" fill="#3a2317" opacity="0.5" />
-  </svg>
+  <div id="counter" aria-hidden="true"></div>
   <button id="cat" aria-label="Kedi">
     <svg viewBox="0 0 120 64">
       <ellipse cx="60" cy="60" rx="46" ry="4" fill="#000" opacity="0.25" />

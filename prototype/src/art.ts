@@ -1,5 +1,6 @@
 import { SPICES, type Spice, type SpiceSymbol } from '../../shared/src/spices';
 import type { Jar } from '../../shared/src/types';
+import { SPICE_PHOTOS } from './textures.gen';
 
 /** Kavanoz çizimi (SVG). Uygulamadaki Skia çizimi aynı ölçüleri kullanacak. */
 
@@ -31,8 +32,11 @@ const SYMBOLS: Record<SpiceSymbol, string> = {
 /** Her baharat için doku deseni (toz, pul, yaprak, tane). Belgeye bir kez eklenir. */
 export function patternDefs(): string {
   return SPICES.map((s) => {
-    const marks = texture(s);
-    return `<pattern id="tex${s.id}" patternUnits="userSpaceOnUse" width="16" height="16"><rect width="16" height="16" fill="${s.color}"/>${marks}</pattern>`;
+    const photo = SPICE_PHOTOS[s.key];
+    // Gerçek fotoğraf dokusu varsa o; yoksa kodla çizilmiş doku.
+    if (photo)
+      return `<pattern id="tex${s.id}" patternUnits="userSpaceOnUse" width="40" height="40"><image href="${photo}" width="40" height="40" preserveAspectRatio="xMidYMid slice"/></pattern>`;
+    return `<pattern id="tex${s.id}" patternUnits="userSpaceOnUse" width="16" height="16"><rect width="16" height="16" fill="${s.color}"/>${texture(s)}</pattern>`;
   }).join('');
 }
 
