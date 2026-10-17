@@ -1,0 +1,43 @@
+# Bağımlılıklar ve build çıktıları
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.turbo/
+
+# Expo / React Native
+.expo/
+app/ios/
+app/android/
+web-build/
+*.jsbundle
+
+# Gizli dosyalar: ASLA commit edilmez
+.env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+*.keystore
+*.jks
+*.pem
+*.key
+google-services.json
+GoogleService-Info.plist
+fastlane/report.xml
+fastlane/README.md
+
+# Sistem / editör
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Expo export çıktısı
+app/dist/

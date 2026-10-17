@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.base.json",
+  "include": ["balance"],
+  "compilerOptions": {
+    "types": ["node"]
+  }
+}

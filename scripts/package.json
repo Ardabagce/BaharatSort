@@ -1,0 +1,14 @@
+{
+  "name": "@baharat-sort/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "balance": "tsx balance/run.ts"
+  },
+  "dependencies": {
+    "@baharat-sort/shared": "workspace:*"
+  }
+}

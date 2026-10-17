@@ -1,0 +1,10 @@
+packages:
+  - app
+  - server
+  - shared
+  - scripts
+
+# Skia'nın postinstall'u iOS/Android hazır kütüphanelerini kopyalar; native derleme için şart.
+onlyBuiltDependencies:
+  - '@shopify/react-native-skia'
+  - esbuild

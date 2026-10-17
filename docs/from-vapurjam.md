@@ -12,27 +12,27 @@ metinler tamamen yeni; VapurJam'den oyun içeriği taşınmaz.
 
 ## Özet tablo
 
-| Alan                     | VapurJam'de                                                        | Baharat Sort'ta                                                                                       |
-| ------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Monorepo                 | pnpm 10 workspaces (`app`, `server`, `shared`), Node 22, hoisted   | Aynı + `scripts` paketi (denge simülasyonu)                                                           |
-| Lint/format/test         | ESLint 10 flat + typescript-eslint + Prettier, Vitest `projects`   | Aynı dosyalar, aynı `pnpm check`                                                                      |
-| TS ayarları              | `tsconfig.base.json` (strict, `noUncheckedIndexedAccess`, …)       | Birebir                                                                                               |
-| Expo                     | SDK 57, RN 0.86, expo-router, Reanimated 4, Skia 2.6               | Aynı sürümler                                                                                         |
-| Yerel kayıt              | **AsyncStorage** (Expo Go'da çalışsın diye MMKV'den vazgeçilmiş)   | **MMKV** (istenen) + Expo Go'da AsyncStorage'a düşen ince bir `kv` katmanı (aşağıda)                  |
-| Anonim ID                | `expo-crypto randomUUID()` → `expo-secure-store`                   | Birebir, anahtar `baharatsort.playerId`                                                               |
-| i18n                     | `strings.ts` (TR/EN tipli anahtarlar), `t()`, `pickLang`, ayardan  | Birebir yapı, tüm metinler yeni; baharat adları iki dilde                                             |
-| Reklam modülü            | `ads/` : `useAds()`, `mockAds`, `nativeAds`, `units`               | Aynı arayüz + **sıklık kuralları shared'de** + dev'de **reklam simülatörü** + banner/ödüllü genişletme |
-| ATT → SDK → UMP sırası   | ATT (aktif + 900 ms, 1 yeniden deneme) → `setRequestConfiguration` → `initialize` → `gatherConsent` | Birebir                                                                    |
-| Reklam ayarı             | `maxAdContentRating: G`, `tagForChildDirectedTreatment: false`     | Birebir                                                                                               |
-| Uzak ayar                | `GET /config` + `mergeConfig` (uzak değer interstitial'ı öne çekemez) | Aynı desen, çok daha geniş şema (ekonomi, reklam, zorluk, bayraklar)                                |
-| Backend                  | Fastify 5 + zod 4 + Drizzle + postgres-js (havuz 5) + PGlite test  | Birebir iskelet; yeni tablolar (`events`), yeni uç noktalar                                           |
-| Paketleme                | esbuild tek dosya, Docker 2 aşama, `--max-old-space-size=160`      | Birebir; bellek sınırı 128 MB'a çekilecek (paket üretimi daha hafif)                                   |
-| Statik sayfalar          | `pages.ts` (tanıtım, gizlilik TR+EN, destek), harici varlık yok    | Aynı yapı, yeni metin ve görsel dil; gizlilikte "oyun olayları" bölümü eklenecek                      |
-| iOS hattı                | `ios.yml` (yalnızca `workflow_dispatch`) + varsayılan yol EAS Build | Birebir: aynı tetikleyici, aynı imzalama, aynı sır adları                                            |
-| Sunucu CI                | `server-ci.yml` (yol filtreli: lint + typecheck + test + docker)   | Birebir                                                                                               |
-| Genel CI                 | `ci.yml` (`pnpm check`)                                            | Birebir                                                                                               |
-| OTA                      | `eas-update.yml`, varsayılan kapalı                                | Birebir (kapalı)                                                                                      |
-| `.gitignore`             | `.env*`, `.p8`, `.p12`, `.mobileprovision`, … asla                 | Birebir                                                                                               |
+| Alan                   | VapurJam'de                                                                                         | Baharat Sort'ta                                                                                        |
+| ---------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Monorepo               | pnpm 10 workspaces (`app`, `server`, `shared`), Node 22, hoisted                                    | Aynı + `scripts` paketi (denge simülasyonu)                                                            |
+| Lint/format/test       | ESLint 10 flat + typescript-eslint + Prettier, Vitest `projects`                                    | Aynı dosyalar, aynı `pnpm check`                                                                       |
+| TS ayarları            | `tsconfig.base.json` (strict, `noUncheckedIndexedAccess`, …)                                        | Birebir                                                                                                |
+| Expo                   | SDK 57, RN 0.86, expo-router, Reanimated 4, Skia 2.6                                                | Aynı sürümler                                                                                          |
+| Yerel kayıt            | **AsyncStorage** (Expo Go'da çalışsın diye MMKV'den vazgeçilmiş)                                    | **MMKV** (istenen) + Expo Go'da AsyncStorage'a düşen ince bir `kv` katmanı (aşağıda)                   |
+| Anonim ID              | `expo-crypto randomUUID()` → `expo-secure-store`                                                    | Birebir, anahtar `baharatsort.playerId`                                                                |
+| i18n                   | `strings.ts` (TR/EN tipli anahtarlar), `t()`, `pickLang`, ayardan                                   | Birebir yapı, tüm metinler yeni; baharat adları iki dilde                                              |
+| Reklam modülü          | `ads/` : `useAds()`, `mockAds`, `nativeAds`, `units`                                                | Aynı arayüz + **sıklık kuralları shared'de** + dev'de **reklam simülatörü** + banner/ödüllü genişletme |
+| ATT → SDK → UMP sırası | ATT (aktif + 900 ms, 1 yeniden deneme) → `setRequestConfiguration` → `initialize` → `gatherConsent` | Birebir                                                                                                |
+| Reklam ayarı           | `maxAdContentRating: G`, `tagForChildDirectedTreatment: false`                                      | Birebir                                                                                                |
+| Uzak ayar              | `GET /config` + `mergeConfig` (uzak değer interstitial'ı öne çekemez)                               | Aynı desen, çok daha geniş şema (ekonomi, reklam, zorluk, bayraklar)                                   |
+| Backend                | Fastify 5 + zod 4 + Drizzle + postgres-js (havuz 5) + PGlite test                                   | Birebir iskelet; yeni tablolar (`events`), yeni uç noktalar                                            |
+| Paketleme              | esbuild tek dosya, Docker 2 aşama, `--max-old-space-size=160`                                       | Birebir; bellek sınırı 128 MB'a çekilecek (paket üretimi daha hafif)                                   |
+| Statik sayfalar        | `pages.ts` (tanıtım, gizlilik TR+EN, destek), harici varlık yok                                     | Aynı yapı, yeni metin ve görsel dil; gizlilikte "oyun olayları" bölümü eklenecek                       |
+| iOS hattı              | `ios.yml` (yalnızca `workflow_dispatch`) + varsayılan yol EAS Build                                 | Birebir: aynı tetikleyici, aynı imzalama, aynı sır adları                                              |
+| Sunucu CI              | `server-ci.yml` (yol filtreli: lint + typecheck + test + docker)                                    | Birebir                                                                                                |
+| Genel CI               | `ci.yml` (`pnpm check`)                                                                             | Birebir                                                                                                |
+| OTA                    | `eas-update.yml`, varsayılan kapalı                                                                 | Birebir (kapalı)                                                                                       |
+| `.gitignore`           | `.env*`, `.p8`, `.p12`, `.mobileprovision`, … asla                                                  | Birebir                                                                                                |
 
 ## 1. Reklam / ATT / UMP modülü (`app/src/ads/`)
 
