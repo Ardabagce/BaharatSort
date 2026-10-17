@@ -47,8 +47,8 @@ describe('seviye ödülleri', () => {
 });
 
 describe('güçlendiriciler', () => {
-  it('başlangıçta her birinden 3 hak', () => {
-    expect(fresh().boosters).toEqual({ undo: 3, extraJar: 3, hint: 3, shuffle: 3 });
+  it('başlangıçta her birinden config kadar hak', () => {
+    expect(fresh().boosters).toEqual(cfg.economy.startBoosters);
   });
 
   it('hak bitince null, altınla ödeme fiyatı düşer', () => {
@@ -62,7 +62,9 @@ describe('güçlendiriciler', () => {
 
   it('yeni öğe hediyesi yalnızca bir kez', () => {
     const r = giveIntroGift(fresh(), cfg, 'hidden')!;
-    expect(r.progress.boosters.hint).toBe(5);
+    expect(r.progress.boosters.hint).toBe(
+      cfg.economy.startBoosters.hint + (cfg.economy.introGift.hidden?.hint ?? 0),
+    );
     expect(giveIntroGift(r.progress, cfg, 'hidden')).toBeNull();
   });
 
@@ -201,7 +203,7 @@ describe('kayıt / yükleme', () => {
     expect(partial.unlocked).toBe(7);
     expect(partial.coins).toBe(cfg.economy.startCoins);
     expect(partial.boosters.hint).toBe(9);
-    expect(partial.boosters.undo).toBe(3);
+    expect(partial.boosters.undo).toBe(cfg.economy.startBoosters.undo);
   });
 });
 

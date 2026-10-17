@@ -80,7 +80,7 @@ pnpm balance      # denge simülasyonu → docs/balance-report.md
 
 ## Ekonomi (`shared/src/config.ts`, `economy.ts`) — simülasyonla ayarlandı, rapor `docs/balance-report.md` (Arda'nın onayını bekliyor)
 
-Para birimi **Altın** (EN: **Gold**). Arda, 17 Ekim 2026: "Akçe ismini değiştirelim, altın olsun". Kodda `coins`. Başlangıç 50 altın + her güçlendiriciden 3 hak.
+Para birimi **Altın** (EN: **Gold**). Arda, 17 Ekim 2026: "Akçe ismini değiştirelim, altın olsun". Kodda `coins`. Başlangıç 50 altın + her güçlendiriciden 1 hak.
 
 | Kazanç                     | Altın                                           |
 | -------------------------- | ----------------------------------------------- |
@@ -101,8 +101,8 @@ Para birimi **Altın** (EN: **Gold**). Arda, 17 Ekim 2026: "Akçe ismini değiş
 | İpucu             |    40 | çözücüden gelir       |
 | Karıştır          |    60 | yalnızca kilitlenince |
 
-Hak bitince: altın **ya da** ödüllü reklam. Öğe tanıtılırken hediye: gizli → 2 ipucu, kilit → 1 boş kavanoz,
-uzun → 2 geri al, dar → 1 ipucu + 1 geri al.
+Hak bitince: altın **ya da** ödüllü reklam. Öğe tanıtılırken hediye: gizli → 1 ipucu, kilit → 1 boş kavanoz,
+uzun → 1 geri al, dar → 1 ipucu.
 
 **Dükkânlar:** Mısır Çarşısı → Kapalıçarşı → Kadıköy Çarşısı → Eminönü İskele Tezgâhı → Adalar Bakkalı.
 Her dükkânda 9 parça (tabela, tezgâh, raflar, terazi, lambalar, halı, kedi yatağı, vitrin, kavanoz seti).
@@ -130,6 +130,10 @@ Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
 - Banner yalnızca ana menü / dükkân altında. App open reklamı yok.
 
 ## Kararlar
+
+- **Görsel ve ses yönü (Arda, 17 Ekim 2026: "çok Claude yapımı görünüyor, otantik olsun", "sesler çok yapay"):** arka plan gerçek Mısır Çarşısı fotoğrafı (bulanık, karartılmış), raf/tezgâh Poly Haven ahşabı, baharat katmanları gerçek yakın çekim fotoğraflardan dikişsiz doku (`prototype/assets/spice_<anahtar>.jpg`; olmayan baharat kodla çizilmiş dokuya düşer), sesler OpenGameArt CC0 kayıtları. Kaynaklar `docs/assets.md`. Wikimedia bu ortamın IP'sine API ve büyük görsel için 429 dönüyor; arama Special:MediaSearch HTML'inden, lisans `action=raw` wikitext'inden, görsel 250/500 px standart küçük resimlerden alınıyor.
+- **Ana menü = dükkân (Arda: "biriken altını harcayacak yer yok", "ana menü olsun"):** açılışta dükkân görünümü; 9 parça dükkânın içinde soluk taslak + fiyat etiketi olarak görünür, dokununca alınır; alınan parçaya dokununca 3 stil seçici. Günlük hediye düğmesi, Oyna (sıradaki seviye), Seviyeler (harita), banner yeri. Oyundaki sol üst düğme dükkâna döner; kazanma kartında "Dükkâna dön".
+- **Güçlendirici hakları (Arda: "yardımcılar çoğunlukla gerekmiyor, çok fazla sayıda"):** başlangıç 3 → 1, tanıtım hediyeleri 1'er. Simülasyonda reklamsız oyuncu artık 7,1 seviyede bir güçlendirici kullanıyor (hedef 4–6 idi; bilinçli sapma). Diğer hedefler tutuyor.
 
 - **Arka plan (Arda, 17 Ekim 2026: "arka plan çok boş, Mısır Çarşısı / Kapalıçarşı dükkânı içi gibi olsun, biz ön tarafta ayırıyormuşuz gibi"):** `prototype/src/scene.ts`. Arkada dükkânın içi: İznik çini şeridi, tavandan sarkan kuru biber/patlıcan/sarımsak/lif kabağı dizileri, kavanoz-teneke-lokum kutusu dolu raflar, çarşı koridoruna açılan kemerli kapı (gelip geçenler), tepsilerde fiyat çubuklu konik baharat yığınları, çuvallar. Ön tezgâhta kedi, bakır terazi, buharı tüten çay bardağı. Oyun alanının ortası koyulaştırılır ki kavanozlar net okunsun. Uygulamada Skia'ya taşınacak; ileride dükkân seçimine (Kapalıçarşı, Kadıköy…) göre sahne değişecek.
 

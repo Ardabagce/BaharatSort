@@ -25,7 +25,13 @@ const result = await build({
 });
 const js = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 // prototype/assets içindeki görseller `__ASSET:dosya.jpg__` olarak anılır, data URI olarak gömülür.
-const mime = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+const mime = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  mp3: 'audio/mpeg',
+};
 const inline = (text) =>
   text.replace(/__ASSET:([\w.-]+)__/g, (_, name) => {
     const file = here(`assets/${name}`);

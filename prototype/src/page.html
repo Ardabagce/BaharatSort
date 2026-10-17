@@ -75,6 +75,17 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
+    /* Gerçek Mısır Çarşısı fotoğrafı (Joseolgon, CC-BY 4.0): bulanık ve karartılmış; ortası daha koyu. */
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 52%, rgba(22, 11, 5, 0.62), rgba(22, 11, 5, 0.25) 75%),
+      linear-gradient(
+        180deg,
+        rgba(22, 11, 5, 0.7),
+        rgba(22, 11, 5, 0) 18%,
+        rgba(22, 11, 5, 0) 75%,
+        rgba(22, 11, 5, 0.6)
+      ),
+      url(__ASSET:bg_bazaar.jpg__) center 35% / cover;
   }
   #scene svg {
     width: 100%;
@@ -708,6 +719,197 @@
     text-transform: uppercase;
     color: var(--brass);
   }
+  /* Ana menü: dükkânın */
+  .home {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto auto;
+    gap: 6px;
+    padding: 10px max(14px, env(safe-area-inset-right, 0px))
+      max(8px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 45%, rgba(22, 11, 5, 0.35), rgba(22, 11, 5, 0.75)),
+      url(__ASSET:bg_bazaar.jpg__) center 35% / cover;
+    animation: fade 200ms ease-out both;
+  }
+  .home-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .coins.big {
+    font-size: 18px;
+    padding: 7px 14px 7px 7px;
+  }
+  .coins.big .coin {
+    width: 26px;
+    height: 26px;
+  }
+  .home-top .iconbtn {
+    margin-left: auto;
+  }
+  .gift-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1.5px solid #e6b85a;
+    background: rgba(200, 68, 58, 0.25);
+    font-weight: 800;
+    animation: glow 1.4s ease-in-out infinite;
+  }
+  .gift-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+  .shop-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .shop-name {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+  }
+  .shop-name span {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.05;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+  }
+  .shop-name small {
+    color: var(--cream-soft);
+    font-size: 13px;
+  }
+  .arrow {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(214, 162, 74, 0.5);
+    background: rgba(0, 0, 0, 0.3);
+    font-size: 26px;
+    line-height: 1;
+  }
+  .arrow[disabled] {
+    opacity: 0.25;
+  }
+  .stall {
+    min-height: 0;
+    display: grid;
+    place-items: end center;
+  }
+  .stall-svg {
+    width: 100%;
+    max-height: 100%;
+    max-width: 460px;
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.55));
+  }
+  .stall-svg .tag,
+  .stall-svg .ghost,
+  .stall-svg .part {
+    cursor: pointer;
+  }
+  .stall-svg .tag {
+    animation: tagbob 2.4s ease-in-out infinite;
+  }
+  @keyframes tagbob {
+    50% {
+      translate: 0 -3px;
+    }
+  }
+  .home-actions {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+  }
+  .btn.play {
+    flex-direction: column;
+    gap: 0;
+    min-height: 62px;
+    font-size: 22px;
+    font-family: var(--font-display);
+    font-weight: 400;
+  }
+  .btn.play small {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .banner-mock {
+    height: 50px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    font-size: 12px;
+    color: var(--cream-soft);
+  }
+  .styles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .style-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(214, 162, 74, 0.35);
+    background: rgba(0, 0, 0, 0.25);
+    font-weight: 800;
+    font-size: 13px;
+    min-width: 0;
+  }
+  .style-card.sel {
+    border-color: var(--glow);
+    box-shadow: 0 0 0 2px rgba(255, 196, 107, 0.4);
+  }
+  .style-card small {
+    color: var(--glow);
+    font-weight: 700;
+  }
+  .swatch-svg {
+    width: 100%;
+    aspect-ratio: 17 / 12;
+    border-radius: 8px;
+  }
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .day {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    font-variant-numeric: tabular-nums;
+  }
+  .day small {
+    font-size: 10px;
+    color: var(--cream-soft);
+  }
+  .day.past {
+    opacity: 0.45;
+  }
+  .day.now {
+    background: var(--glow);
+    color: var(--ink);
+  }
+  .day.now small {
+    color: var(--ink);
+  }
   /* Seviye haritası: sıva duvar üstünde çarşı yolu */
   .map {
     position: absolute;
@@ -925,6 +1127,8 @@
     .zz,
     .hint-src,
     .boost.glow,
+    .gift-btn,
+    .stall-svg .tag,
     .node.cur {
       animation: none !important;
     }
@@ -933,7 +1137,13 @@
 
 <div id="app">
   <div id="scene"></div>
-  <svg id="ceiling" viewBox="0 0 400 210" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+  <svg
+    id="ceiling"
+    hidden
+    viewBox="0 0 400 210"
+    preserveAspectRatio="xMidYMin slice"
+    aria-hidden="true"
+  >
     <defs>
       <radialGradient id="lampGlow">
         <stop offset="0" stop-color="#ffd27a" stop-opacity="0.75" />

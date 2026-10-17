@@ -1,61 +1,61 @@
 # Denge raporu
 
-`pnpm balance` ile üretilir (scripts/balance). 300 seviye × 3 profil × 5 oyuncu, 79 sn. Değerler `shared/src/config.ts` › `DEFAULT_CONFIG`.
+`pnpm balance` ile üretilir (scripts/balance). 300 seviye × 3 profil × 5 oyuncu, 57 sn. Değerler `shared/src/config.ts` › `DEFAULT_CONFIG`.
 
 ## Özet
 
 | Hedef                                    | İstenen            | Sonuç                  |     |
 | ---------------------------------------- | ------------------ | ---------------------- | :-: |
-| Reklamsız oyuncu güçlendirici sıklığı    | her 4–6 seviyede 1 | her 5.8 seviyede 1     | ✅  |
+| Reklamsız oyuncu güçlendirici sıklığı    | her 4–6 seviyede 1 | her 7.1 seviyede 1     | ❌  |
 | Dekorasyon parçası sıklığı (reklamsız)   | ~3 seviyede 1      | 3.1 seviyede 1         | ✅  |
-| Dükkân başına seviye (reklamsız)         | 25–30              | 23 / 26 / 29 / 29 / 32 | ✅  |
-| Sık izleyenin hızlanması (5 dükkân)      | %40–60             | %46                    | ✅  |
-| En yüksek altın bakiyesi (tüm profiller) | < 1000             | 100                    | ✅  |
-| Saatlik geçiş reklamı (en yüksek)        | ≤ 6                | 5.5                    | ✅  |
+| Dükkân başına seviye (reklamsız)         | 25–30              | 23 / 26 / 29 / 30 / 30 | ✅  |
+| Sık izleyenin hızlanması (5 dükkân)      | %40–60             | %47                    | ✅  |
+| En yüksek altın bakiyesi (tüm profiller) | < 1000             | 147                    | ✅  |
+| Saatlik geçiş reklamı (en yüksek)        | ≤ 6                | 5.4                    | ✅  |
 
 ## Profiller
 
 |                                  | Reklam izlemeyen | Ara sıra izleyen (%30) | Sık izleyen (%70) |
 | -------------------------------- | ---------------: | ---------------------: | ----------------: |
-| Oyun süresi (300 seviye)         |          11.0 sa |                10.7 sa |           11.2 sa |
-| Seviye başına kazanç             |       21.6 altın |             27.7 altın |        33.1 altın |
-| Seviye başına harcama            |       21.8 altın |             27.8 altın |        33.3 altın |
-| Güçlendirici / seviye            |             0.17 |                   0.24 |              0.27 |
-| … haktan                         |             13.0 |                   13.0 |              13.0 |
-| … altınla                        |             38.4 |                   22.6 |              10.2 |
-| … reklamla                       |              0.0 |                   36.0 |              57.4 |
-| Geri al / boş kavanoz / karıştır | 44.4 / 4.0 / 3.0 |      28.6 / 40.0 / 3.0 | 16.2 / 61.4 / 3.0 |
+| Oyun süresi (300 seviye)         |          11.0 sa |                10.8 sa |           11.3 sa |
+| Seviye başına kazanç             |       22.0 altın |             27.4 altın |        33.4 altın |
+| Seviye başına harcama            |       22.1 altın |             27.6 altın |        33.5 altın |
+| Güçlendirici / seviye            |             0.14 |                   0.25 |              0.29 |
+| … haktan                         |              5.0 |                    5.0 |               5.0 |
+| … altınla                        |             37.0 |                   27.8 |              13.0 |
+| … reklamla                       |              0.0 |                   42.2 |              69.8 |
+| Geri al / boş kavanoz / karıştır | 39.0 / 2.0 / 1.0 |      29.8 / 44.2 / 1.0 | 15.0 / 71.8 / 1.0 |
 | Dükkân tamam: misir              |               23 |                     19 |                14 |
 | Dükkân tamam: kapali             |               49 |                     38 |                34 |
 | Dükkân tamam: kadikoy            |               78 |                     58 |                54 |
-| Dükkân tamam: eminonu            |              107 |                     80 |                76 |
-| Dükkân tamam: adalar             |              139 |                    103 |                95 |
-| Ek stil alınan (90 üzerinden)    |             35.2 |                   64.8 |              87.6 |
-| Ödüllü reklam / saat             |              0.0 |                   13.4 |              24.1 |
-| Geçiş reklamı / saat             |              5.5 |                    3.0 |               1.2 |
-| Toplam reklam / saat             |              5.5 |                   16.4 |              25.3 |
-| En yüksek bakiye                 |               83 |                     89 |               100 |
+| Dükkân tamam: eminonu            |              108 |                     79 |                76 |
+| Dükkân tamam: adalar             |              138 |                    102 |                94 |
+| Ek stil alınan (90 üzerinden)    |             37.2 |                   62.0 |              87.6 |
+| Ödüllü reklam / saat             |              0.0 |                   14.0 |              25.1 |
+| Geçiş reklamı / saat             |              5.4 |                    2.9 |               1.1 |
+| Toplam reklam / saat             |              5.4 |                   16.8 |              26.1 |
+| En yüksek bakiye                 |               83 |                     89 |               147 |
 
 ### İlk denemede bitirme (kilitlenmeden)
 
 | Tür      | Reklam izlemeyen | Ara sıra izleyen (%30) | Sık izleyen (%70) | Ort. deneme (reklamsız) |
 | -------- | ---------------: | ---------------------: | ----------------: | ----------------------: |
 | tutorial |             %100 |                   %100 |              %100 |                     1.0 |
-| normal   |              %75 |                    %75 |               %74 |                     1.5 |
-| relief   |              %87 |                    %89 |               %89 |                     1.1 |
-| hard     |              %54 |                    %59 |               %57 |                     3.6 |
-| veryHard |              %55 |                    %55 |               %60 |                     2.2 |
+| normal   |              %76 |                    %75 |               %72 |                     1.4 |
+| relief   |              %89 |                    %86 |               %88 |                     1.1 |
+| hard     |              %56 |                    %54 |               %53 |                     3.4 |
+| veryHard |              %48 |                    %49 |               %44 |                     2.4 |
 
 ### 50 seviyelik bloklarda altın (seviye başına ort.)
 
 | Seviyeler | Reklam izlemeyen: kazanç / harcama / bakiye | Ara sıra izleyen (%30): kazanç / harcama / bakiye | Sık izleyen (%70): kazanç / harcama / bakiye |
 | --------- | ------------------------------------------: | ------------------------------------------------: | -------------------------------------------: |
-| 1–50      |                            20.2 / 21.5 / 17 |                                  26.5 / 27.9 / 20 |                             28.1 / 29.2 / 49 |
-| 51–100    |                            21.2 / 20.7 / 40 |                                  29.3 / 29.0 / 34 |                             33.5 / 34.2 / 14 |
-| 101–150   |                            21.3 / 21.4 / 38 |                                  28.2 / 28.0 / 44 |                             35.0 / 34.8 / 25 |
-| 151–200   |                            22.6 / 22.9 / 25 |                                  27.0 / 27.3 / 27 |                             33.9 / 33.6 / 39 |
-| 201–250   |                            21.8 / 21.4 / 43 |                                  27.4 / 26.9 / 50 |                             34.2 / 34.3 / 37 |
-| 251–300   |                            22.6 / 22.7 / 40 |                                  27.6 / 27.9 / 38 |                             33.8 / 33.5 / 52 |
+| 1–50      |                            20.2 / 21.5 / 17 |                                  26.5 / 27.9 / 20 |                             28.1 / 29.2 / 50 |
+| 51–100    |                            21.5 / 21.0 / 43 |                                  29.5 / 29.3 / 27 |                             33.7 / 34.2 / 26 |
+| 101–150   |                            22.0 / 22.3 / 29 |                                  27.2 / 27.1 / 34 |                             34.7 / 34.3 / 46 |
+| 151–200   |                             22.7 / 23.2 / 3 |                                  27.2 / 26.9 / 50 |                             34.2 / 33.9 / 61 |
+| 201–250   |                            22.5 / 21.6 / 49 |                                  27.8 / 27.7 / 54 |                             34.8 / 35.2 / 42 |
+| 251–300   |                            22.9 / 23.1 / 36 |                                  26.4 / 26.6 / 43 |                             35.0 / 34.5 / 68 |
 
 ## Zorluk skoru
 
@@ -129,7 +129,7 @@ Testere dişi: her 5. seviye zor, her 20. çok zor, ardından rahatlatıcı.
 ## Değerler
 
 - Seviye ödülü: normal 10, zor 25, çok zor 60; geri almadan +5. Başlangıç 50 altın.
-- Güçlendiriciler: geri al 30, boş kavanoz 80, ipucu 40, karıştır 60. Başlangıçta her birinden 3 hak.
+- Güçlendiriciler: geri al 30, boş kavanoz 80, ipucu 40, karıştır 60. Başlangıçta her birinden 1 hak.
 - Günlük hediye: 10, 15, 20, 25, 30, 40, 50. Günün bulmacası 40.
 - Altın veren ödüllü reklam ("2x al", "eksiği tamamla") günde en fazla 14. Eksik 30 altınden azsa tamamlama teklifi.
 - Dekorasyon: misir 520, kapali 540, kadikoy 580, eminonu 620, adalar 660 altın (9 parça); ek stil = parça fiyatı × 1.2.

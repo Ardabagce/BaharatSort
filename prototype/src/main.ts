@@ -11,6 +11,19 @@ import {
 } from '../../shared/src/adPolicy';
 import { DEFAULT_CONFIG, type BoosterKind } from '../../shared/src/config';
 import {
+  buyDecoration,
+  buyStyle,
+  claimDailyGift,
+  coinAdsLeft,
+  isShopComplete,
+  isShopUnlocked,
+  itemKey,
+  nextGiftDay,
+  noteCoinAd,
+  addCoins,
+  selectStyle,
+  stylePrice,
+  topUpShortfall,
   completeLevel,
   consumeFreeHint,
   doubleReward,
@@ -40,6 +53,7 @@ import type { Feature, LevelDef } from '../../shared/src/types';
 import { CORK_ROOM, JAR_W, jarHeight, jarSVG, LAYER_H, MOUTH_Y, patternDefs, TOP } from './art';
 import {
   audio,
+  sfxCoins,
   sfxCork,
   sfxPour,
   sfxPurr,
@@ -51,7 +65,8 @@ import {
   vibrate,
 } from './audio';
 import { mapHTML } from './map';
-import { propsSVG, sceneSVG } from './scene';
+import { propsSVG } from './scene';
+import { ANCHORS, ITEM_ORDER, stallSVG, styleSwatch, type ItemId } from './stall';
 import { getLang, setLang, t, type Lang } from './strings';
 
 const cfg = DEFAULT_CONFIG;
@@ -134,6 +149,7 @@ function level(n: number): LevelDef {
 }
 
 function startLevel(n: number) {
+  document.getElementById('home')?.remove();
   app.scrollLeft = 0;
   app.scrollTop = 0;
   levelN = n;
@@ -166,7 +182,7 @@ function renderHeader() {
   $('info').textContent = settings.showInfo
     ? t('info', { d: lv.stats.difficulty, m: lv.stats.minMoves, j: lv.jars.length })
     : '';
-  $('btnLevels').setAttribute('aria-label', t('levels'));
+  $('btnLevels').setAttribute('aria-label', t('home'));
   $('btnSettings').setAttribute('aria-label', t('settings'));
   $('btnRestart').setAttribute('aria-label', t('restart'));
 }
@@ -774,8 +790,13 @@ function showWinCard(r: { first: boolean; base: number; bonus: number }) {
       <div class="stack">
         ${r.first && r.base > 0 ? `<button class="btn ad" id="wAd">${t('doubleAd')}</button>` : ''}
         <button class="btn primary" id="wNext">${t('next')}</button>
+        <button class="btn plain" id="wShop">${t('toShop')}</button>
       </div></div>`);
   bumpCoins();
+  v.querySelector('#wShop')!.addEventListener('click', () => {
+    startLevel(Math.min(BUILTIN_LEVELS.length, levelN + 1));
+    openHome();
+  });
   v.querySelector('#wAd')?.addEventListener('click', async () => {
     // Reklam penceresi kartın yerini alır; sonuca göre ya sonraki seviyeye geçilir ya kart geri gelir.
     const res = await rewardedAd();
@@ -1029,10 +1050,228 @@ function openLevels() {
   if (cur) scroll.scrollTop = cur.offsetTop - scroll.clientHeight / 2;
 }
 
+// --- Ana menü: dükkân ve dekorasyon --------------------------------------------------------------
+
+const WOOD_URI = '__ASSET:wood_shelf.jpg__';
+const COUNTER_URI = '__ASSET:wood_counter.jpg__';
+const today = () => new Date().toLocaleDateString('sv');
+let viewShop = progress.activeShop;
+
+function shopName(id: string) {
+  return t(`shop_${id}` as never);
+}
+
+function ownedMap(shop: string): Partial<Record<ItemId, number>> {
+  const out: Partial<Record<ItemId, number>> = {};
+  for (const id of ITEM_ORDER) {
+    const o = progress.owned[itemKey(shop, id)];
+    if (o) out[id] = o.selected;
+  }
+  return out;
+}
+
+function openHome() {
+  closeVeil();
+  document.getElementById('home')?.remove();
+  const shops = cfg.economy.shops;
+  if (!isShopUnlocked(progress, cfg, viewShop)) viewShop = progress.activeShop;
+  const shop = shops.find((x) => x.id === viewShop)!;
+  const owned = ownedMap(shop.id);
+  const count = Object.keys(owned).length;
+  const idx = shops.findIndex((x) => x.id === shop.id);
+  const prev = shops[idx - 1];
+  const next = shops[idx + 1];
+  const giftDay = nextGiftDay(progress, cfg, today());
+  const prices = Object.fromEntries(shop.items.map((it) => [it.id, it.price])) as Record<
+    ItemId,
+    number
+  >;
+  const h = document.createElement('div');
+  h.id = 'home';
+  h.className = 'home';
+  h.innerHTML = `
+    <div class="home-top">
+      <div class="coins big"><svg class="coin" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#b8862e"/><circle cx="12" cy="12" r="8.5" fill="#e6b85a" stroke="#8d6220"/><path d="M12 6.5l1.6 3.4 3.7.4-2.8 2.5.8 3.7L12 14.6l-3.3 1.9.8-3.7-2.8-2.5 3.7-.4z" fill="#8d6220"/></svg><span id="homeCoins">${progress.coins}</span></div>
+      ${giftDay ? `<button class="gift-btn" id="hGift"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="2" fill="#c8443a"/><rect x="2" y="7" width="20" height="4" rx="1" fill="#e06a55"/><rect x="11" y="7" width="2.5" height="14" fill="#e6b85a"/><path d="M12 7c-2-4-6-4-6-1s4 1 6 1c2 0 6 2 6-1s-4-3-6 1z" fill="#e6b85a"/></svg><span>${t('dailyGift')}</span></button>` : ''}
+      <button class="iconbtn" id="hSettings" aria-label="${t('settings')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+    </div>
+    <div class="shop-bar">
+      <button class="arrow" id="hPrev" ${prev && isShopUnlocked(progress, cfg, prev.id) ? '' : 'disabled'} aria-label="‹">‹</button>
+      <div class="shop-name"><span>${shopName(shop.id)}</span><small>${t('decorProgress', { n: count, m: shop.items.length })}${next && !isShopUnlocked(progress, cfg, next.id) ? ` · ${t('nextShopHint', { name: shopName(next.id) })}` : ''}</small></div>
+      <button class="arrow" id="hNext" ${next && isShopUnlocked(progress, cfg, next.id) ? '' : 'disabled'} aria-label="›">›</button>
+    </div>
+    <div class="stall" id="hStall">${stallSVG({ shop: shop.id, shopName: shopName(shop.id), owned, prices }, WOOD_URI, COUNTER_URI)}</div>
+    <div class="home-actions">
+      <button class="btn primary play" id="hPlay"><span>${t('play')}</span><small>${t('level', { n: Math.min(BUILTIN_LEVELS.length, progress.unlocked) })}</small></button>
+      <button class="btn plain" id="hMap">${t('levels')}</button>
+    </div>
+    <div class="banner-mock">${t('bannerMock')}</div>`;
+  app.appendChild(h);
+  h.querySelector('#hPlay')!.addEventListener('click', () => {
+    unlock();
+    h.remove();
+    startLevel(Math.min(BUILTIN_LEVELS.length, progress.unlocked));
+  });
+  h.querySelector('#hMap')!.addEventListener('click', () => {
+    unlock();
+    openLevels();
+  });
+  h.querySelector('#hSettings')!.addEventListener('click', () => {
+    unlock();
+    openSettings();
+  });
+  h.querySelector('#hGift')?.addEventListener('click', () => {
+    unlock();
+    openGift();
+  });
+  h.querySelector('#hPrev')!.addEventListener('click', () => {
+    if (prev) viewShop = prev.id;
+    openHome();
+  });
+  h.querySelector('#hNext')!.addEventListener('click', () => {
+    if (next) viewShop = next.id;
+    openHome();
+  });
+  h.querySelector('#hStall')!.addEventListener('click', (e) => {
+    unlock();
+    const item = (e.target as Element)
+      .closest('[data-item]')
+      ?.getAttribute('data-item') as ItemId | null;
+    if (!item) return;
+    if (owned[item] !== undefined) openStyles(shop.id, item);
+    else void buyItem(shop.id, item);
+  });
+}
+
+function refreshHomeCoins() {
+  const c = document.getElementById('homeCoins');
+  if (c) c.textContent = String(progress.coins);
+  bumpCoins();
+}
+
+function celebrateItem(item: ItemId) {
+  const svg = document.querySelector<SVGSVGElement>('#hStall svg');
+  if (!svg) return;
+  const r = svg.getBoundingClientRect();
+  const a = app.getBoundingClientRect();
+  const [x, y] = ANCHORS[item];
+  sparkle(r.left - a.left + (x / 400) * r.width, r.top - a.top + (y / 450) * r.height, '#e6b85a');
+}
+
+async function buyItem(shop: string, item: ItemId) {
+  const price = cfg.economy.shops
+    .find((s) => s.id === shop)!
+    .items.find((i) => i.id === item)!.price;
+  const name = t(`item_${item}` as never);
+  if (progress.coins >= price) {
+    const v = veil(`<div class="card"><h2>${name}</h2><p>${t('buyItemBody', { p: price })}</p>
+      <div class="stack"><button class="btn primary" id="bBuy">${t('buyItem', { p: price })}</button><button class="btn plain" id="bNo">${t('cancel')}</button></div></div>`);
+    v.querySelector('#bNo')!.addEventListener('click', closeVeil);
+    v.querySelector('#bBuy')!.addEventListener('click', () => {
+      const wasComplete = isShopComplete(progress, cfg, shop);
+      const next = buyDecoration(progress, cfg, shop, item);
+      if (!next) return;
+      progress = next;
+      persist();
+      sfxCoins();
+      closeVeil();
+      if (!wasComplete && isShopComplete(progress, cfg, shop)) {
+        viewShop = progress.activeShop;
+        openHome();
+        toast(t('shopDone', { name: shopName(shop) }));
+      } else openHome();
+      celebrateItem(item);
+    });
+    return;
+  }
+  const short = topUpShortfall(progress, cfg, price);
+  if (short !== null && coinAdsLeft(progress, cfg, today()) > 0) {
+    const v = veil(`<div class="card"><h2>${name}</h2><p>${t('shortBody', { s: short })}</p>
+      <div class="stack"><button class="btn ad" id="bAd">${t('topUpAd', { s: short })}</button><button class="btn plain" id="bNo">${t('cancel')}</button></div></div>`);
+    v.querySelector('#bNo')!.addEventListener('click', closeVeil);
+    v.querySelector('#bAd')!.addEventListener('click', async () => {
+      const r = await rewardedAd();
+      if (r === 'rewarded') {
+        progress = noteCoinAd(addCoins(progress, short), today());
+        persist();
+        refreshHomeCoins();
+        await buyItem(shop, item);
+      } else if (r === 'unavailable') toast(t('noAdPlain'));
+    });
+    return;
+  }
+  toast(t('needMore', { s: price - progress.coins }));
+}
+
+function openStyles(shop: string, item: ItemId) {
+  const key = itemKey(shop, item);
+  const own = progress.owned[key]!;
+  const price = stylePrice(cfg, shop, item)!;
+  const cards = [0, 1, 2]
+    .map((st) => {
+      const has = own.styles.includes(st);
+      const sel = own.selected === st;
+      return `<button class="style-card${sel ? ' sel' : ''}" data-style="${st}">${styleSwatch(item, st, shopName(shop), WOOD_URI, COUNTER_URI)}<span>${t(`style_${item}_${st}` as never)}</span><small>${sel ? t('inUse') : has ? t('use') : `${price} ${t('gold')}`}</small></button>`;
+    })
+    .join('');
+  const v = veil(
+    `<div class="card sheet"><h2>${t(`item_${item}` as never)}</h2><p>${t('styleBody')}</p><div class="styles">${cards}</div><button class="btn plain" id="sClose">${t('close')}</button></div>`,
+  );
+  v.querySelector('#sClose')!.addEventListener('click', () => openHome());
+  v.querySelector('.styles')!.addEventListener('click', (e) => {
+    const st = Number((e.target as Element).closest('[data-style]')?.getAttribute('data-style'));
+    if (Number.isNaN(st)) return;
+    if (own.styles.includes(st)) {
+      progress = selectStyle(progress, shop, item, st);
+      persist();
+      openHome();
+      return;
+    }
+    const next = buyStyle(progress, cfg, shop, item, st);
+    if (!next) {
+      toast(t('needMore', { s: price - progress.coins }));
+      return;
+    }
+    progress = next;
+    persist();
+    sfxCoins();
+    openHome();
+    celebrateItem(item);
+  });
+}
+
+function openGift() {
+  const r = claimDailyGift(progress, cfg, today());
+  if (!r) return;
+  progress = r.progress;
+  persist();
+  sfxCoins();
+  const canAd = coinAdsLeft(progress, cfg, today()) > 0;
+  const days = cfg.economy.dailyGift
+    .map(
+      (g, i) =>
+        `<div class="day${i + 1 < r.day ? ' past' : i + 1 === r.day ? ' now' : ''}"><small>${t('day', { n: i + 1 })}</small><b>${g}</b></div>`,
+    )
+    .join('');
+  const v =
+    veil(`<div class="card"><h2>${t('dailyGift')}</h2><div class="days">${days}</div><p>${t('giftBody', { n: r.reward })}</p>
+    <div class="stack">${canAd ? `<button class="btn ad" id="gAd">${t('giftAd', { n: r.reward })}</button>` : ''}<button class="btn primary" id="gOk">${t('great')}</button></div></div>`);
+  v.querySelector('#gOk')!.addEventListener('click', () => openHome());
+  v.querySelector('#gAd')?.addEventListener('click', async () => {
+    const res = await rewardedAd();
+    if (res === 'rewarded') {
+      progress = noteCoinAd(addCoins(progress, r.reward), today());
+      persist();
+      sfxCoins();
+      toast(t('doubled', { n: r.reward }));
+    } else if (res === 'unavailable') toast(t('noAdPlain'));
+    openHome();
+  });
+}
+
 // --- Açılış --------------------------------------------------------------------------------------
 
 document.getElementById('patterns')!.innerHTML = patternDefs();
-$('scene').innerHTML = sceneSVG();
 $('props').innerHTML = propsSVG();
 $('btnSettings').addEventListener('click', () => {
   unlock();
@@ -1040,7 +1279,7 @@ $('btnSettings').addEventListener('click', () => {
 });
 $('btnLevels').addEventListener('click', () => {
   unlock();
-  openLevels();
+  if (!busy) openHome();
 });
 $('btnRestart').addEventListener('click', () => {
   unlock();
@@ -1079,9 +1318,10 @@ window.addEventListener('resize', () => {
 });
 
 function boot(data: unknown) {
-  const d = data as { level?: number } | undefined;
+  const d = data as { level?: number; home?: boolean } | undefined;
   startLevel(d?.level ?? levelN);
+  if (d?.home !== false) openHome();
 }
-hot?.snapshot?.(() => ({ level: levelN }));
+hot?.snapshot?.(() => ({ level: levelN, home: !!document.getElementById('home') }));
 if (hot?.ready) hot.ready(boot);
 else boot(hot?.data);
