@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: 'probe (yalnızca oku) | sync (mağaza bilgilerini yaz)'
+        description: 'probe (yalnızca oku) | sync (mağaza bilgilerini yaz) | where (sırlar nerede, yalnızca evet/hayır)'
         required: true
         default: probe
 concurrency:
@@ -25,7 +25,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Sırlar nerede (değer yazdırılmaz, yalnızca var/yok)
+        run: |
+          echo "Secrets   APPSTORE_API_KEY_P8=${{ secrets.APPSTORE_API_KEY_P8 != '' }} APPSTORE_KEY_ID=${{ secrets.APPSTORE_KEY_ID != '' }} APPSTORE_ISSUER_ID=${{ secrets.APPSTORE_ISSUER_ID != '' }} APPLE_TEAM_ID=${{ secrets.APPLE_TEAM_ID != '' }}"
+          echo "Variables APPSTORE_API_KEY_P8=${{ vars.APPSTORE_API_KEY_P8 != '' }} APPSTORE_KEY_ID=${{ vars.APPSTORE_KEY_ID != '' }} APPSTORE_ISSUER_ID=${{ vars.APPSTORE_ISSUER_ID != '' }} APPLE_TEAM_ID=${{ vars.APPLE_TEAM_ID != '' }}"
+          echo "Diğer olası adlar (Secrets): KEY_ID=${{ secrets.KEY_ID != '' }} ISSUER_ID=${{ secrets.ISSUER_ID != '' }} TEAM_ID=${{ secrets.TEAM_ID != '' }} P8=${{ secrets.P8 != '' }} ASC_KEY_ID=${{ secrets.ASC_KEY_ID != '' }} APP_STORE_CONNECT_API_KEY=${{ secrets.APP_STORE_CONNECT_API_KEY != '' }}"
+          echo "Diğer olası adlar (Variables): KEY_ID=${{ vars.KEY_ID != '' }} ISSUER_ID=${{ vars.ISSUER_ID != '' }} TEAM_ID=${{ vars.TEAM_ID != '' }} KeyID=${{ vars.KeyID != '' }} IssuerID=${{ vars.IssuerID != '' }} TeamID=${{ vars.TeamID != '' }}"
       - name: API anahtarı
+        if: inputs.task != 'where'
         run: |
           trim() { printf '%s' "$1" | tr -d '[:space:]'; }
           [ -z "$P8" ] && { echo "::error::APPSTORE_API_KEY_P8 yok"; exit 1; }
@@ -39,4 +46,5 @@ jobs:
             echo "ASC_KEY_PATH=$RUNNER_TEMP/keys/key.p8"
           } >> "$GITHUB_ENV"
       - name: ${{ inputs.task }}
+        if: inputs.task != 'where'
         run: node store/${{ inputs.task == 'sync' && 'sync' || 'probe' }}.mjs
