@@ -18,7 +18,7 @@ import { GAME_HTML } from './game/game.gen';
 const SAVE_KEY = 'baharatsort.save.v1';
 const BG = '#1D120B';
 // Oyun sayfasının kökeni. İnternete çıkmaz; yalnızca localStorage/Web Audio için güvenli bir köken.
-const BASE_URL = 'https://baharatsort.bagce.dev/';
+const BASE_URL = 'https://baharat.bagce.dev/';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 

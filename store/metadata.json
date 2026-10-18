@@ -5,8 +5,8 @@
   "contentRights": "USES_THIRD_PARTY_CONTENT",
   "category": { "primary": "GAMES", "sub1": "GAMES_PUZZLE", "sub2": "GAMES_CASUAL" },
   "urls": {
-    "privacy": "https://github.com/Ardabagce/BaharatSort/blob/HEAD/store/privacy.md",
-    "support": "https://github.com/Ardabagce/BaharatSort/blob/HEAD/store/support.md"
+    "privacy": "https://baharat.bagce.dev/privacy",
+    "support": "https://baharat.bagce.dev/support"
   },
   "locales": {
     "tr": {

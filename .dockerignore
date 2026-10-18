@@ -1,7 +1,9 @@
 **/node_modules
 **/dist
-**/.expo
+app/ios
+app/android
+app/assets
+prototype
+store
+docs
 .git
-app/*
-!app/package.json
-server/.env*
