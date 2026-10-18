@@ -358,14 +358,33 @@
       transform: translate(-50%, 6px);
     }
   }
-  .grow {
+  /* Döküm: akan katmanlar tek blok hâlinde dolar / boşalır (kırpma dikdörtgeni). */
+  .fill-rise,
+  .fill-drain {
     transform-box: fill-box;
     transform-origin: 50% 100%;
-    animation: grow 330ms ease-out both;
-    animation-delay: 60ms;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
   }
-  @keyframes grow {
+  .fill-rise {
+    animation-name: fill-rise;
+  }
+  .fill-drain {
+    animation-name: fill-drain;
+  }
+  @keyframes fill-rise {
     from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+  @keyframes fill-drain {
+    from {
+      transform: scaleY(1);
+    }
+    to {
       transform: scaleY(0);
     }
   }

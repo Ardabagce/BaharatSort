@@ -49,8 +49,18 @@ import {
 } from '../../shared/src/session';
 import { checkPour } from '../../shared/src/rules';
 import { SPICES } from '../../shared/src/spices';
-import type { Feature, GameState, LevelDef } from '../../shared/src/types';
-import { CORK_ROOM, JAR_W, jarHeight, jarSVG, LAYER_H, MOUTH_Y, patternDefs, TOP } from './art';
+import type { Feature, GameState, Jar, LevelDef } from '../../shared/src/types';
+import {
+  CORK_ROOM,
+  JAR_W,
+  jarHeight,
+  type JarDrawOpts,
+  jarSVG,
+  LAYER_H,
+  MOUTH_Y,
+  patternDefs,
+  TOP,
+} from './art';
 import {
   audio,
   sfxCoins,
@@ -260,7 +270,7 @@ function renderBoard() {
 
 function drawJar(
   i: number,
-  extra: { grown?: number; corkDrop?: boolean } = {},
+  extra: Partial<Pick<JarDrawOpts, 'grown' | 'drained' | 'flowMs' | 'flowDelay' | 'corkDrop'>> = {},
   state: GameState = session.state,
 ) {
   const el = jarEls[i];
@@ -553,10 +563,19 @@ async function animatePour(job: PourJob) {
   if (settings.haptics) vibrate(12);
   const surfaceY =
     dR.top + (CORK_ROOM + TOP + (prev.cap - prev.jars[to]!.layers.length) * LAYER_H) * scale;
+  const fall = streamFall(surfaceY - lip.y, pourMs);
   stream(lip.x - appR.left, lip.y - appR.top, surfaceY - appR.top, spice.id, pourMs, scale);
-  drawJar(from, {}, job.after);
-  drawJar(to, { grown: job.amount, corkDrop: job.capped }, job.after);
+  // Kaynak, ağızdan tek parça boşalır; hedef, akış yüzeye varınca tek parça dolar.
+  drawJar(from, { drained: job.amount, flowMs: pourMs * 0.8 }, prev);
+  drawJar(
+    to,
+    { grown: job.amount, flowMs: Math.max(60, pourMs - fall * 0.6), flowDelay: fall },
+    // Kapak, dolma bitince düşer.
+    job.capped ? withJar(job.after, to, { capped: false }) : job.after,
+  );
   await wait(pourMs);
+  drawJar(from, {}, job.after);
+  if (job.capped) drawJar(to, { corkDrop: true }, job.after);
   puff(lip.x - appR.left, surfaceY - appR.top, spice.light, scale);
 
   const back = srcEl.animate(
@@ -594,12 +613,21 @@ function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
   return e;
 }
 
+function withJar(state: GameState, i: number, patch: Partial<Jar>): GameState {
+  return { ...state, jars: state.jars.map((j, k) => (k === i ? { ...j, ...patch } : j)) };
+}
+
+/** Akışın başının ağızdan yüzeye varma süresi (ms). */
+function streamFall(len: number, ms: number) {
+  return Math.min(ms * 0.4, 60 + Math.max(8, len) * 0.9);
+}
+
 /** Ağızdan yüzeye düşen baharat: ince, taneli bir akış; baştan düşer, sonda kopar. */
 function stream(x: number, y0: number, y1: number, spice: number, ms: number, scale: number) {
   if (reduced) return;
   const s = SPICES[spice]!;
   const len = Math.max(8, y1 - y0);
-  const fall = Math.min(ms * 0.4, 60 + len * 0.9); // akışın başının yüzeye varma süresi
+  const fall = streamFall(len, ms);
   const w = Math.max(2.5, 3.4 * scale);
   const strands = [
     { dx: 0, w, color: s.color, op: 0.85, dash: '' },

@@ -70,8 +70,13 @@ function texture(s: Spice): string {
 export interface JarDrawOpts {
   uid: string;
   colorblind: boolean;
-  /** Bu dökümde eklenen üst katman sayısı (büyüme animasyonu). */
+  /** Bu dökümde eklenen üst katman sayısı: hepsi tek blok hâlinde aşağıdan yukarı dolar. */
   grown?: number;
+  /** Bu dökümde boşalan üst katman sayısı: hepsi tek blok hâlinde ağızdan boşalır. */
+  drained?: number;
+  /** Dolma/boşalma animasyonunun süresi ve gecikmesi (ms). */
+  flowMs?: number;
+  flowDelay?: number;
   /** Kapak bu dökümde kapandı (düşme animasyonu). */
   corkDrop?: boolean;
 }
@@ -85,15 +90,18 @@ export function jarSVG(jar: Jar, cap: number, o: JarDrawOpts): string {
   const clipId = `cl-${o.uid}`;
   const n = jar.layers.length;
   let layers = '';
+  // Dökümde akan üst katmanlar tek parça: ayrı bir grupta toplanır, tek bir kırpma
+  // dikdörtgeniyle birlikte dolar (hedef) ya da boşalır (kaynak).
+  const flowN = Math.min(n, o.grown ?? o.drained ?? 0);
+  let flow = '';
   for (let i = 0; i < n; i++) {
     const c = jar.layers[i]!;
     const y = yB - (i + 1) * LAYER_H;
     // En alt katman camın kavisli dibine kadar iner (yoksa altta ince bir boşluk kalıyordu).
     const h = LAYER_H + (i === 0 ? 6 : 0.6);
     const hidden = i < jar.hidden;
-    const grow = o.grown && i >= n - o.grown ? ' class="grow"' : '';
     if (hidden) {
-      layers += `<g${grow}><rect x="5" y="${y}" width="54" height="${h}" fill="#5a4334"/><path d="M8 ${y + 4}h48M8 ${y + 12}h48" stroke="#6f5443" stroke-width="1"/><text x="32" y="${y + 15}" text-anchor="middle" font-size="14" font-weight="800" fill="#e6d2b0" font-family="Alegreya Sans, sans-serif">?</text></g>`;
+      layers += `<g><rect x="5" y="${y}" width="54" height="${h}" fill="#5a4334"/><path d="M8 ${y + 4}h48M8 ${y + 12}h48" stroke="#6f5443" stroke-width="1"/><text x="32" y="${y + 15}" text-anchor="middle" font-size="14" font-weight="800" fill="#e6d2b0" font-family="Alegreya Sans, sans-serif">?</text></g>`;
       continue;
     }
     const s = SPICES[c]!;
@@ -106,7 +114,15 @@ export function jarSVG(jar: Jar, cap: number, o: JarDrawOpts): string {
       const dark = s.key === 'salt' || s.key === 'turmeric' || s.key === 'mint';
       g += `<path d="${SYMBOLS[s.symbol]}" transform="translate(32 ${y + LAYER_H / 2}) scale(0.95)" fill="${dark ? '#2a170d' : '#fff8ec'}" stroke="${dark ? '#fff8ec' : '#2a170d'}" stroke-width="0.8"/>`;
     }
-    layers += `<g${grow}>${g}</g>`;
+    if (i >= n - flowN) flow += `<g>${g}</g>`;
+    else layers += `<g>${g}</g>`;
+  }
+  if (flowN > 0) {
+    const top = yB - n * LAYER_H - 5;
+    const bottom = yB - (n - flowN) * LAYER_H + (n === flowN ? 6 : 0.6);
+    const cls = o.grown ? 'fill-rise' : 'fill-drain';
+    const timing = `animation-duration:${Math.round(o.flowMs ?? 400)}ms;animation-delay:${Math.round(o.flowDelay ?? 0)}ms`;
+    layers += `<defs><clipPath id="fl-${o.uid}"><rect class="${cls}" style="${timing}" x="0" y="${top}" width="${JAR_W}" height="${bottom - top}"/></clipPath></defs><g clip-path="url(#fl-${o.uid})">${flow}</g>`;
   }
   const cork = jar.capped
     ? `<g${o.corkDrop ? ' class="cork-drop"' : ''}><rect x="${neckL - 3}" y="2" width="${neckR - neckL + 6}" height="12" rx="3" fill="#b98953"/><rect x="${neckL - 3}" y="2" width="${neckR - neckL + 6}" height="4" rx="2" fill="#d6a874"/><g fill="#8a6038"><circle cx="${neckL + 4}" cy="9" r="1"/><circle cx="32" cy="11" r="1"/><circle cx="${neckR - 5}" cy="8" r="1"/></g></g>`
