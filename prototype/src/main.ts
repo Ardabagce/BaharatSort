@@ -247,7 +247,6 @@ function renderBoard() {
       el.className = 'jar';
       el.style.width = `${jarPx}px`;
       el.dataset.i = String(i);
-      el.addEventListener('click', onJarTap);
       row.appendChild(el);
       jarEls.push(el);
       drawJar(i);
@@ -316,10 +315,30 @@ function clearHint() {
   for (const el of jarEls) el.classList.remove('hint-src', 'hint-dst');
 }
 
-function onJarTap(e: Event) {
+// Dokunuşlar kavanozların raftaki asıl yerine göre çözülür: dökerken eğilip başka
+// kavanozların üstüne gelen kavanoz, hızlı oynarken alttakine yapılan dokunuşu çalmasın.
+stage.addEventListener('click', (e) => {
+  const target = (e.target as HTMLElement).closest<HTMLElement>('.jar');
+  // Klavye (Enter/Boşluk) doğrudan düğmeye gelir.
+  if (target && e.detail === 0) return onJarTap(Number(target.dataset.i));
+  for (const el of jarEls) {
+    const row = el.parentElement!.getBoundingClientRect();
+    const left = row.left + el.offsetLeft;
+    const top = row.top + el.offsetTop;
+    const pad = 4;
+    if (
+      e.clientX >= left - pad &&
+      e.clientX <= left + el.offsetWidth + pad &&
+      e.clientY >= top - 18 &&
+      e.clientY <= top + el.offsetHeight + pad
+    )
+      return onJarTap(Number(el.dataset.i));
+  }
+});
+
+function onJarTap(i: number) {
   unlock();
   if (ended) return;
-  const i = Number((e.currentTarget as HTMLElement).dataset.i);
   const jar = session.state.jars[i]!;
   if (selected === null) {
     if (jar.layers.length === 0 || jar.capped || jar.lock !== null) {
@@ -461,54 +480,91 @@ async function animatePour(job: PourJob) {
   srcEl.classList.remove('lifted', 'picked');
   const sR = srcEl.getBoundingClientRect();
   const dR = dstEl.getBoundingClientRect();
-  const scale = sR.width / JAR_W;
-  const totalH = jarHeight(prev.cap) + CORK_ROOM;
-  const dir = dR.left + dR.width / 2 >= sR.left + sR.width / 2 ? 1 : -1;
-  const theta = (dir * 72 * Math.PI) / 180;
+  const scale = dR.width / JAR_W;
+  const W = srcEl.offsetWidth;
+  const H = srcEl.offsetHeight;
+  const natural = dR.left + dR.width / 2 >= sR.left + sR.width / 2 ? 1 : -1;
   const centerS = { x: sR.left + sR.width / 2, y: sR.top + sR.height / 2 };
-  const mouthD = (totalH / 2 - MOUTH_Y) * scale;
-  const dstMouth = { x: dR.left + dR.width / 2, y: dR.top + MOUTH_Y * scale };
-  const pourPoint = { x: dstMouth.x - dir * dR.width * 0.12, y: dstMouth.y - 22 * scale - 14 };
-  const newCenter = {
-    x: pourPoint.x - Math.sin(theta) * mouthD,
-    y: pourPoint.y + Math.cos(theta) * mouthD,
+  // Ağız aşağı bakacak kadar eğilir (ağız en alt nokta olur) ve hedefin boğazının hemen
+  // üstüne gelir; gövde yana, komşu kavanozların üstüne uzanır, hiçbirine girmez.
+  // Yanda yer yoksa öbür taraftan döker, o da olmazsa daha az eğilir.
+  const fit = (dir: number, deg: number) => {
+    const t = (dir * deg * Math.PI) / 180;
+    const c = Math.cos(t);
+    const s = Math.sin(t);
+    const lipLocal = { x: dir * W * 0.3, y: -H / 2 + (CORK_ROOM + 1) * scale };
+    const lip = { x: dR.left + dR.width / 2 - dir * dR.width * 0.06, y: dR.top + 2 * scale };
+    const center = {
+      x: lip.x - (lipLocal.x * c - lipLocal.y * s),
+      y: lip.y - (lipLocal.x * s + lipLocal.y * c),
+    };
+    // Kavanoz silüeti: boğaz, omuz ve dip köşeleri.
+    const shoulder = -H / 2 + (CORK_ROOM + TOP - 6) * scale;
+    const pts = [-1, 1].flatMap((k) => [
+      [k * W * 0.3, lipLocal.y],
+      [k * W * 0.5, shoulder],
+      [k * W * 0.5, H / 2],
+    ]);
+    const xs = pts.map(([px, py]) => center.x + px! * c - py! * s);
+    const low = Math.max(...pts.map(([px, py]) => center.y + px! * s + py! * c));
+    const up = Math.max(0, low - (dR.top + 4 * scale));
+    lip.y -= up;
+    center.y -= up;
+    const fits = Math.min(...xs) >= appR.left + 2 && Math.max(...xs) <= appR.right - 2;
+    return { dir, deg, lip, center, fits };
   };
-  const dx = newCenter.x - centerS.x;
-  const dy = newCenter.y - centerS.y;
+  const tries: [number, number][] = [
+    [natural, 104],
+    [natural, 92],
+    [-natural, 104],
+    [-natural, 92],
+    [natural, 80],
+    [-natural, 80],
+    [natural, 66],
+  ];
+  let pose = fit(natural, 66);
+  for (const [d, g] of tries) {
+    const f = fit(d, g);
+    if (f.fits) {
+      pose = f;
+      break;
+    }
+  }
+  const { dir, deg, lip, center } = pose;
+  const dx = center.x - centerS.x;
+  const dy = center.y - centerS.y;
+  const tilted = `translate(${dx}px, ${dy}px) rotate(${dir * deg}deg)`;
   srcEl.style.zIndex = '5';
   const anim = srcEl.animate(
     [
       { transform: 'translate(0,-10px) rotate(0deg)' },
-      { transform: `translate(${dx}px, ${dy}px) rotate(${dir * 72}deg)` },
+      {
+        transform: `translate(${dx * 0.85}px, ${dy * 0.85 - 6}px) rotate(${dir * deg * 0.4}deg)`,
+        offset: 0.6,
+      },
+      { transform: tilted },
     ],
-    { duration: reduced ? 1 : 170 * speed, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' },
+    { duration: reduced ? 1 : 200 * speed, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' },
   );
   await anim.finished.catch(() => {});
 
-  const pourMs = reduced ? 1 : (150 + job.amount * 70) * speed;
+  const pourMs = reduced ? 1 : (180 + job.amount * 80) * speed;
   sfxPour(spice.texture, pourMs / 1000 + 0.1);
   if (settings.haptics) vibrate(12);
   const surfaceY =
     dR.top + (CORK_ROOM + TOP + (prev.cap - prev.jars[to]!.layers.length) * LAYER_H) * scale;
-  stream(
-    pourPoint.x - appR.left,
-    pourPoint.y - appR.top + 2,
-    surfaceY - appR.top,
-    spice.id,
-    pourMs,
-    scale,
-  );
+  stream(lip.x - appR.left, lip.y - appR.top, surfaceY - appR.top, spice.id, pourMs, scale);
   drawJar(from, {}, job.after);
   drawJar(to, { grown: job.amount, corkDrop: job.capped }, job.after);
   await wait(pourMs);
-  puff(dstMouth.x - appR.left, dstMouth.y - appR.top, spice.light, scale);
+  puff(lip.x - appR.left, surfaceY - appR.top, spice.light, scale);
 
   const back = srcEl.animate(
-    [
-      { transform: `translate(${dx}px, ${dy}px) rotate(${dir * 72}deg)` },
-      { transform: 'translate(0,0) rotate(0deg)' },
-    ],
-    { duration: reduced ? 1 : 170 * speed, easing: 'cubic-bezier(.4,0,.2,1)' },
+    [{ transform: tilted }, { transform: 'translate(0,0) rotate(0deg)' }],
+    {
+      duration: reduced ? 1 : 190 * speed,
+      easing: 'cubic-bezier(.4,0,.2,1)',
+    },
   );
   anim.cancel();
   await back.finished.catch(() => {});
@@ -538,48 +594,83 @@ function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
   return e;
 }
 
+/** Ağızdan yüzeye düşen baharat: ince, taneli bir akış; baştan düşer, sonda kopar. */
 function stream(x: number, y0: number, y1: number, spice: number, ms: number, scale: number) {
   if (reduced) return;
   const s = SPICES[spice]!;
-  const w = Math.max(3, 6 * scale);
-  const line = el('path', {
-    d: `M${x} ${y0} Q${x + 1} ${(y0 + y1) / 2} ${x} ${y1}`,
-    stroke: s.color,
-    'stroke-width': w,
-    'stroke-linecap': 'round',
-    fill: 'none',
-    opacity: 0.95,
-  });
-  const len = Math.max(10, y1 - y0);
-  line.style.strokeDasharray = `${len}`;
-  line.animate(
-    [
-      { strokeDashoffset: len, opacity: 1 },
-      { strokeDashoffset: 0, opacity: 1, offset: 0.25 },
-      { strokeDashoffset: 0, opacity: 1, offset: 0.8 },
-      { strokeDashoffset: -len, opacity: 0.6 },
-    ],
-    { duration: ms, easing: 'linear' },
-  ).onfinish = () => line.remove();
-  // Taneler: akışın etrafında düşen küçük parçacıklar.
-  for (let k = 0; k < 16; k++) {
+  const len = Math.max(8, y1 - y0);
+  const fall = Math.min(ms * 0.4, 60 + len * 0.9); // akışın başının yüzeye varma süresi
+  const w = Math.max(2.5, 3.4 * scale);
+  const strands = [
+    { dx: 0, w, color: s.color, op: 0.85, dash: '' },
+    { dx: -w * 0.35, w: w * 0.45, color: s.light, op: 0.7, dash: `${2 * scale} ${3 * scale}` },
+    { dx: w * 0.4, w: w * 0.35, color: s.color, op: 0.8, dash: `${1.5 * scale} ${4 * scale}` },
+  ];
+  for (const st of strands) {
+    const line = el('line', {
+      x1: x + st.dx,
+      y1: y0,
+      x2: x + st.dx * 1.4,
+      y2: y1,
+      stroke: st.color,
+      'stroke-width': st.w,
+      'stroke-linecap': 'round',
+      opacity: st.op,
+    });
+    // Baş: 0 → len düşer; kuyruk: sonda yukarıdan aşağı kopar.
+    line.style.strokeDasharray = `${len} ${len * 2}`;
+    const head = fall / ms;
+    line.animate(
+      [
+        { strokeDashoffset: len },
+        { strokeDashoffset: 0, offset: head },
+        { strokeDashoffset: 0, offset: Math.max(head, 1 - head * 0.8) },
+        { strokeDashoffset: -len },
+      ],
+      { duration: ms, easing: 'linear' },
+    ).onfinish = () => line.remove();
+    if (st.dash) {
+      // Taneli doku: kısa çizgiler aşağı akar.
+      const g = el('line', {
+        x1: x + st.dx,
+        y1: y0,
+        x2: x + st.dx,
+        y2: y1,
+        stroke: st.color,
+        'stroke-width': st.w * 0.9,
+        'stroke-dasharray': st.dash,
+        opacity: 0,
+      });
+      g.animate(
+        [
+          { strokeDashoffset: 0, opacity: 0 },
+          { opacity: 0.9, offset: head },
+          { opacity: 0.9, offset: 0.85 },
+          { strokeDashoffset: -len, opacity: 0 },
+        ],
+        { duration: ms, easing: 'linear' },
+      ).onfinish = () => g.remove();
+    }
+  }
+  // Ağızdan saçılan birkaç tane.
+  const n = 22;
+  for (let k = 0; k < n; k++) {
     const d = el('circle', {
-      cx: x,
-      cy: y0,
-      r: (s.texture === 'seed' ? 1.6 : 1.1) * Math.max(0.8, scale),
+      cx: 0,
+      cy: 0,
+      r: (s.texture === 'seed' ? 1.5 : 1.1) * Math.max(0.8, scale),
       fill: k % 3 ? s.color : s.light,
     });
-    const delay = (k / 16) * ms * 0.8;
-    const jitter = (Math.random() - 0.5) * 10 * scale;
+    const jitter = (Math.random() - 0.5) * 7 * scale;
     d.animate(
       [
-        { transform: 'translate(0,0)', opacity: 0 },
-        { opacity: 1, offset: 0.1 },
-        { transform: `translate(${jitter}px, ${y1 - y0}px)`, opacity: 0.9 },
+        { transform: `translate(${x}px, ${y0}px)`, opacity: 0 },
+        { opacity: 1, offset: 0.15 },
+        { transform: `translate(${x + jitter}px, ${y1 - 2}px)`, opacity: 0.85 },
       ],
       {
-        duration: Math.max(160, (y1 - y0) * 2.2),
-        delay,
+        duration: fall * (0.9 + Math.random() * 0.3),
+        delay: (k / n) * ms * 0.75,
         easing: 'cubic-bezier(.5,0,1,1)',
         fill: 'both',
       },
@@ -587,20 +678,21 @@ function stream(x: number, y0: number, y1: number, spice: number, ms: number, sc
   }
 }
 
+/** Yüzeye düşerken kalkan hafif toz. */
 function puff(x: number, y: number, color: string, scale: number) {
   if (reduced) return;
-  for (let k = 0; k < 9; k++) {
-    const a = (k / 9) * Math.PI - Math.PI;
-    const c = el('circle', { cx: x, cy: y, r: 3 * scale + 2, fill: color, opacity: 0.5 });
+  for (let k = 0; k < 7; k++) {
+    const a = (k / 6) * Math.PI - Math.PI;
+    const c = el('circle', { cx: 0, cy: 0, r: 2.2 * scale + 1, fill: color, opacity: 0 });
     c.animate(
       [
-        { transform: 'translate(0,0) scale(0.6)', opacity: 0.55 },
+        { transform: `translate(${x}px, ${y}px) scale(0.5)`, opacity: 0.45 },
         {
-          transform: `translate(${Math.cos(a) * 22 * scale}px, ${Math.sin(a) * 14 * scale - 6}px) scale(1.8)`,
+          transform: `translate(${x + Math.cos(a) * 16 * scale}px, ${y + Math.sin(a) * 9 * scale}px) scale(1.5)`,
           opacity: 0,
         },
       ],
-      { duration: 520 + k * 20, easing: 'ease-out' },
+      { duration: 420 + k * 20, easing: 'ease-out' },
     ).onfinish = () => c.remove();
   }
 }

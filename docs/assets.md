@@ -26,16 +26,16 @@ CC-BY-SA dosyaların değiştirilmiş hâli de CC-BY-SA'dır).
 
 ## Sesler (OpenGameArt, hepsi CC0)
 
-| Dosya               | Kaynak                                                                                              | Kullanım                              |
-| ------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| `sfx_pour.mp3`      | [Sow seeds](https://opengameart.org/content/sow-seeds)                                              | Baharat dökme                         |
-| `sfx_pour_seed.mp3` | [100 CC0 SFX #2](https://opengameart.org/content/100-cc0-sfx-2) (`stones_02`)                       | Taneli baharatlarda tıkırtı           |
-| `sfx_tink.mp3`      | [100 CC0 SFX #2](https://opengameart.org/content/100-cc0-sfx-2) (`glass_04`)                        | Kavanoz seçme                         |
-| `sfx_cork.mp3`      | [Glass bottle open/close](https://opengameart.org/content/glass-bottle-open-close)                  | Mantar kapak                          |
-| `sfx_thud.mp3`      | [100 CC0 SFX](https://opengameart.org/content/100-cc0-sfx) (`wooden_02`)                            | Geçersiz döküm                        |
-| `sfx_coins.mp3`     | [50 RPG sound effects](https://opengameart.org/content/50-rpg-sound-effects) (Kenney)               | Altın                                 |
-| `sfx_win.mp3`       | [Win jingle](https://opengameart.org/content/win-jingle) (fretless)                                 | Seviye bitti                          |
-| `sfx_meow.mp3`      | [Cat purr & meow](https://opengameart.org/content/cat-purr-meow)                                    | Kedi                                  |
-| `sfx_bazaar.mp3`    | [Crowd shouting/speaking ambience](https://opengameart.org/content/crowd-shoutingspeaking-ambience) | Çarşı uğultusu (alçak geçiren, kısık) |
+| Dosya               | Kaynak                                                                                                                            | Kullanım                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `sfx_pour.mp3`      | [Sow seeds](https://opengameart.org/content/sow-seeds)                                                                            | Baharat dökme                                                              |
+| `sfx_pour_seed.mp3` | [100 CC0 SFX #2](https://opengameart.org/content/100-cc0-sfx-2) (`stones_02`)                                                     | Taneli baharatlarda tıkırtı                                                |
+| `sfx_tink.mp3`      | [100 CC0 SFX #2](https://opengameart.org/content/100-cc0-sfx-2) (`glass_04`)                                                      | Kavanoz seçme                                                              |
+| `sfx_cork.mp3`      | [Glass bottle open/close](https://opengameart.org/content/glass-bottle-open-close)                                                | Mantar kapak                                                               |
+| `sfx_thud.mp3`      | [100 CC0 SFX](https://opengameart.org/content/100-cc0-sfx) (`wooden_02`)                                                          | Geçersiz döküm                                                             |
+| `sfx_coins.mp3`     | [50 RPG sound effects](https://opengameart.org/content/50-rpg-sound-effects) (Kenney)                                             | Altın                                                                      |
+| `sfx_win.mp3`       | [Cozy Puzzle Jingle & Result](https://opengameart.org/content/cozy-puzzle-jingle-result) (mintodog, `Cozy Puzzle Clear (Jingle)`) | Seviye bitti (sakin ezgi, stereo)                                          |
+| `sfx_meow.mp3`      | [Cat purr & meow](https://opengameart.org/content/cat-purr-meow)                                                                  | Kedi                                                                       |
+| `sfx_calm.mp3`      | [Ambient Relaxing Loop](https://opengameart.org/content/ambient-relaxing-loop) (isaiah658)                                        | Arka plan sesi (yumuşatılmış, uçları birbirine geçirilerek dikişsiz döngü) |
 
-Sesler mono'ya çevrildi, kırpıldı, ses seviyeleri eşitlendi (ffmpeg `loudnorm`), MP3 64 kbps.
+Sesler mono'ya çevrildi (bitiş ezgisi hariç), kırpıldı, ses seviyeleri eşitlendi (ffmpeg `loudnorm`), MP3 64–112 kbps. Önceki çarşı kalabalığı kaydı (bağırışlı) ve gitar ezgisi Arda'nın isteğiyle çıkarıldı (18 Ekim 2026: "çığlık çığlığa", "daha sakin").

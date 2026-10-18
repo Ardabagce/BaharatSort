@@ -15,7 +15,7 @@ const SRC = {
   coins: '__ASSET:sfx_coins.mp3__',
   win: '__ASSET:sfx_win.mp3__',
   meow: '__ASSET:sfx_meow.mp3__',
-  bazaar: '__ASSET:sfx_bazaar.mp3__',
+  calm: '__ASSET:sfx_calm.mp3__',
 };
 type Name = keyof typeof SRC;
 
@@ -23,7 +23,8 @@ let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 const buffers: Partial<Record<Name, AudioBuffer>> = {};
 let loading: Promise<void> | null = null;
-let ambience: { stop: () => void } | null = null;
+let ambience: { stop: () => void; gain: GainNode } | null = null;
+const AMBIENCE_GAIN = 0.22;
 export const audio = { sound: true, music: true };
 
 function ac(): AudioContext | null {
@@ -126,10 +127,18 @@ export function sfxCoins() {
   play('coins', { gain: 0.8 });
 }
 
-/** Kazanma: perdesiz gitar ezgisi + altın şıngırtısı. */
+/** Kazanma: sakin, kısa bir ezgi; çalarken arka plan kısılır. */
 export function sfxWin() {
-  play('win', { gain: 0.8 });
-  play('coins', { gain: 0.5, delay: 0.9 });
+  play('win', { gain: 0.6 });
+  if (ambience && ctx) {
+    const g = ambience.gain.gain;
+    const t = ctx.currentTime;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(0.04, t + 0.4);
+    g.setValueAtTime(0.04, t + 5.4);
+    g.linearRampToValueAtTime(AMBIENCE_GAIN, t + 8);
+  }
 }
 
 /** Kedi: miyav + mırlama. */
@@ -137,22 +146,25 @@ export function sfxPurr() {
   play('meow', { gain: 0.8, rate: vary(1, 0.06) });
 }
 
-/** Çarşı uğultusu: kısık, döngüde. */
-function startAmbience(c: AudioContext, b: AudioBuffer): { stop: () => void } {
+/** Arka plan: yumuşak, sakin bir ses halısı; döngüde, kısık. */
+function startAmbience(c: AudioContext, b: AudioBuffer): { stop: () => void; gain: GainNode } {
   const src = c.createBufferSource();
   src.buffer = b;
   src.loop = true;
+  // mp3 kodlayıcısının baştaki/sondaki sessizliği döngüde tık yapmasın.
+  src.loopStart = 0.05;
+  src.loopEnd = b.duration - 0.05;
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, c.currentTime);
-  g.gain.linearRampToValueAtTime(0.35, c.currentTime + 2);
+  g.gain.linearRampToValueAtTime(AMBIENCE_GAIN, c.currentTime + 3);
   src.connect(g).connect(master!);
-  src.start();
-  return { stop: () => src.stop() };
+  src.start(0, 0.05);
+  return { stop: () => src.stop(), gain: g };
 }
 
 export function syncAmbience() {
   const want = audio.music && audio.sound;
-  const b = buffers.bazaar;
+  const b = buffers.calm;
   if (want && !ambience && ctx && master && b) ambience = startAmbience(ctx, b);
   if (!want && ambience) {
     ambience.stop();
