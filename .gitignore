@@ -41,3 +41,6 @@ fastlane/README.md
 
 # Expo export çıktısı
 app/dist/
+
+# Oyun sayfası (prototype/build.mjs üretir)
+app/src/game/game.gen.ts

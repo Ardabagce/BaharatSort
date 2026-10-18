@@ -1,0 +1,131 @@
+# iPhone uygulamasını (Expo prebuild) derler ve TestFlight'a yükler. VapurJam'in ios.yml'iyle aynı hat.
+# Gereken depo sırları (Settings › Secrets and variables › Actions › Secrets), VapurJam'le aynı adlar:
+#   APPSTORE_API_KEY_P8   App Store Connect API anahtarının .p8 dosyasının TÜM içeriği
+#   APPSTORE_KEY_ID       Anahtarın Key ID'si
+#   APPSTORE_ISSUER_ID    Issuer ID (App Store Connect › Kullanıcılar ve Erişim › Entegrasyonlar)
+#   APPLE_TEAM_ID         10 haneli Team ID
+# Sırlar yoksa yalnızca derlenebilirlik kontrolü yapılır (simülatör derlemesi).
+# Reklam kimlikleri (ADMOB_IOS_*) 7. aşamada eklenecek.
+name: iOS
+on:
+  # Repo public: Actions dakikası ücretsiz. Uygulamayı etkileyen her değişiklikte otomatik + elle.
+  push:
+    branches: [main, claude/sweet-sagan-r89olv]
+    paths:
+      - 'app/**'
+      - 'shared/**'
+      - 'prototype/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash # -eo pipefail: borudaki hata adımı düşürür
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 90
+    # Sırlar bu adlı ortamın (Environment) altında da durabilir; "Repository secrets"teyse bu satır zararsız.
+    environment: APPSTORE_API_KEY_P8
+    env:
+      P8: ${{ github.event_name != 'pull_request' && secrets.APPSTORE_API_KEY_P8 || '' }}
+      KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      CI: 1
+      # Hız: React Native çekirdeğini ve Expo modüllerini kaynaktan derlemek yerine hazır XCFramework'ler.
+      RCT_USE_PREBUILT_RNCORE: 1
+      RCT_USE_RN_DEP: 1
+      EXPO_USE_PRECOMPILED_MODULES: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Xcode 26 (App Store iOS 26 SDK şartı)
+        run: |
+          ls -d /Applications/Xcode*.app
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -vi beta | sort -V | tail -1)
+          [ -z "$X" ] && X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$X" ]; then echo "::error::Bu sunucuda Xcode 26 yok"; exit 1; fi
+          sudo xcode-select -s "$X"
+          xcodebuild -version
+      - name: Bağımlılıklar, oyun sayfası ve native proje
+        run: |
+          export IOS_BUILD_NUMBER=$((100 + ${{ github.run_number }}))
+          echo "IOS_BUILD_NUMBER=$IOS_BUILD_NUMBER" >> "$GITHUB_ENV"
+          pnpm install --frozen-lockfile
+          # Oyunun kendisi (app/src/game/game.gen.ts): prototip derleyicisi üretir.
+          pnpm prototype
+          cd app
+          npx expo prebuild --platform ios --clean
+          cd ios
+          WS=$(ls -d *.xcworkspace | head -1)
+          echo "WORKSPACE=$WS" >> "$GITHUB_ENV"
+          echo "SCHEME=${WS%.xcworkspace}" >> "$GITHUB_ENV"
+          echo "Derleme numarası: $IOS_BUILD_NUMBER, çalışma alanı: $WS"
+      - name: Derlenebilirlik kontrolü (imzasız, simülatör)
+        if: env.P8 == '' || env.TEAM_ID == '' || env.KEY_ID == '' || env.ISSUER_ID == ''
+        working-directory: app/ios
+        run: |
+          missing=""
+          [ -z "$P8" ] && missing="$missing APPSTORE_API_KEY_P8"
+          [ -z "$KEY_ID" ] && missing="$missing APPSTORE_KEY_ID"
+          [ -z "$ISSUER_ID" ] && missing="$missing APPSTORE_ISSUER_ID"
+          [ -z "$TEAM_ID" ] && missing="$missing APPLE_TEAM_ID"
+          echo "::warning::Eksik depo sırları:$missing. Yalnızca derleme kontrolü yapılıyor, TestFlight'a yüklenmeyecek."
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -30
+      - name: API anahtarı
+        if: env.P8 != '' && env.TEAM_ID != '' && env.KEY_ID != '' && env.ISSUER_ID != ''
+        run: |
+          # Sırlar elle yapıştırıldığı için boşluk/satır sonu farklarını tolere et: kimlikleri kırp,
+          # .p8'i başlık/altbilgi ve boşluklardan arındırıp standart PEM olarak yeniden kur.
+          trim() { printf '%s' "$1" | tr -d '[:space:]'; }
+          KEY_ID=$(trim "$KEY_ID"); TEAM_ID=$(trim "$TEAM_ID")
+          {
+            echo "ASC_KEY_ID=$KEY_ID"
+            echo "ASC_ISSUER_ID=$(trim "$ISSUER_ID")"
+            echo "ASC_TEAM_ID=$TEAM_ID"
+          } >> "$GITHUB_ENV"
+          body=$(printf '%s' "$P8" | sed 's/\\n/ /g' | sed 's/-----[A-Z ]*-----//g' | tr -d '[:space:]')
+          if [ -z "$body" ]; then echo "::error::APPSTORE_API_KEY_P8 boş görünüyor"; exit 1; fi
+          mkdir -p "$RUNNER_TEMP/keys"
+          {
+            echo "-----BEGIN PRIVATE KEY-----"
+            printf '%s' "$body" | fold -w 64
+            echo
+            echo "-----END PRIVATE KEY-----"
+          } > "$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8"
+          # Anahtarı yazdırmadan doğrula.
+          if ! openssl pkey -in "$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8" -noout 2>/dev/null; then
+            echo "::error::APPSTORE_API_KEY_P8 geçerli bir .p8 anahtarı değil (uzunluk: ${#body} karakter). .p8 dosyasının tüm içeriğini yeniden yapıştır."
+            exit 1
+          fi
+          echo "API anahtarı hazır (Key ID uzunluğu ${#KEY_ID}, Team ID uzunluğu ${#TEAM_ID})."
+      - name: Arşivle (imzalı)
+        if: env.P8 != '' && env.TEAM_ID != '' && env.KEY_ID != '' && env.ISSUER_ID != ''
+        working-directory: app/ios
+        run: |
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            DEVELOPMENT_TEAM="$ASC_TEAM_ID" CODE_SIGN_STYLE=Automatic CURRENT_PROJECT_VERSION=$IOS_BUILD_NUMBER \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            archive | tail -30
+      - name: TestFlight'a yükle
+        if: env.P8 != '' && env.TEAM_ID != '' && env.KEY_ID != '' && env.ISSUER_ID != ''
+        working-directory: app
+        run: |
+          sed "s/TEAM_ID/$ASC_TEAM_ID/" ExportOptions.plist > "$RUNNER_TEMP/ExportOptions.plist"
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/out" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          echo "Yüklendi. App Store Connect › TestFlight'ta birkaç dakika içinde görünür."

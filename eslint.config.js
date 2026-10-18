@@ -14,6 +14,7 @@ export default tseslint.config(
       'app/ios/**',
       'app/android/**',
       'app/expo-env.d.ts',
+      'app/src/game/game.gen.ts',
     ],
   },
   js.configs.recommended,

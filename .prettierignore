@@ -5,3 +5,6 @@ coverage
 .expo
 shared/src/levels/builtin.json
 app/src/levels/*.json
+app/src/game/game.gen.ts
+app/ios
+app/android

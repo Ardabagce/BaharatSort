@@ -61,6 +61,7 @@ import {
   patternDefs,
   TOP,
 } from './art';
+import { hostSaved, inApp, postHost } from './host';
 import {
   audio,
   sfxCoins,
@@ -105,7 +106,8 @@ interface Saved {
 }
 function load(): Partial<Saved> {
   try {
-    return JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Saved>;
+    // Uygulamada kayıt telefonda durur (WebView deposu silinebilir); tarayıcıda localStorage.
+    return JSON.parse(hostSaved() ?? localStorage.getItem(KEY) ?? '{}') as Partial<Saved>;
   } catch {
     return {};
   }
@@ -118,18 +120,17 @@ let settings: Settings = {
   haptics: true,
   colorblind: false,
   lang: navigator.language?.toLowerCase().startsWith('tr') === false ? 'en' : 'tr',
-  showInfo: true,
+  showInfo: !inApp,
   adFail: false,
   ...saved.settings,
 };
 let ads: AdCounters = saved.ads ? onNewSession(parseAdCounters(saved.ads)) : DEFAULT_AD_COUNTERS;
 let lastDecision = '–';
 function persist() {
+  const data = JSON.stringify({ progress: JSON.stringify(progress), settings, ads, level: levelN });
+  if (inApp) postHost({ type: 'save', data });
   try {
-    localStorage.setItem(
-      KEY,
-      JSON.stringify({ progress: JSON.stringify(progress), settings, ads, level: levelN }),
-    );
+    localStorage.setItem(KEY, data);
   } catch {
     // depolama kapalı: oyun yine oynanır
   }

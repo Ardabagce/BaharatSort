@@ -1,3 +1,4 @@
+import { inApp, postHost } from './host';
 import type { Texture } from '../../shared/src/spices';
 
 /**
@@ -173,6 +174,8 @@ export function syncAmbience() {
 }
 
 export function vibrate(pattern: number | number[]) {
+  // iPhone'da navigator.vibrate yok: uygulamada titreşimi telefon yapar (expo-haptics).
+  if (inApp) return postHost({ type: 'haptic', pattern });
   try {
     navigator.vibrate?.(pattern);
   } catch {

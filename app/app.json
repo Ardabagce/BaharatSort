@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Baharat Sort",
+    "slug": "baharat-sort",
+    "scheme": "baharatsort",
+    "version": "1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#1D120B",
+    "ios": {
+      "bundleIdentifier": "dev.bagce.baharatsort",
+      "supportsTablet": false,
+      "requireFullScreen": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": ["tr", "en"],
+        "CFBundleDevelopmentRegion": "tr",
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent"
+      }
+    },
+    "android": {
+      "package": "dev.bagce.baharatsort"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#1D120B"
+        }
+      ]
+    ]
+  }
+}

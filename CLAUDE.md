@@ -21,7 +21,7 @@ sıralama bulmacası ve kendi sunucumuzda çalışan backend'i. Altyapı VapurJa
 1. Monorepo iskeleti (pnpm: app, server, shared, scripts), lint/format, vitest, CI ✅
 2. `shared`: kural motoru, üretici, çözücü, testler, 1000 seviye → `docs/levels.md` ✅
 3. Ekonomi config'i + denge simülasyonu → `docs/balance-report.md` ✅ (Arda'nın onayını bekliyor)
-4. `app`: oynanabilir çekirdek (döküm animasyonu, ses, titreşim, kazanma/kilitlenme, renk körü, reklam simülatörü)
+4. `app`: oynanabilir çekirdek (döküm animasyonu, ses, titreşim, kazanma/kilitlenme, renk körü, reklam simülatörü) — iOS kabuğu + GitHub Actions → TestFlight hattı kuruldu (ilk build)
 5. Seviye haritası, dükkân/dekorasyon, günlük hediye, güçlendiriciler
 6. `server`: API, DB, events, admin stats, Dockerfile, statik sayfalar
 7. Gerçek reklamlar + ATT + UMP + yayın hattı → ilk TestFlight
@@ -34,7 +34,7 @@ Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HT
 
 | Klasör     | Paket                   | Görev                                                        |
 | ---------- | ----------------------- | ------------------------------------------------------------ |
-| `app/`     | `@baharat-sort/app`     | iOS istemcisi (Expo SDK 58, expo-router, Skia, Reanimated)   |
+| `app/`     | `@baharat-sort/app`     | iOS istemcisi (Expo SDK 58, oyun çevrimdışı WebView'da)      |
 | `server/`  | `@baharat-sort/server`  | Fastify + Drizzle/PostgreSQL + zod, Coolify'da Docker ile    |
 | `shared/`  | `@baharat-sort/shared`  | Kurallar, çözücü, üretici, config, ekonomi, reklam kuralları |
 | `scripts/` | `@baharat-sort/scripts` | Denge simülasyonu (`scripts/balance`)                        |
@@ -140,11 +140,13 @@ Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
 
 - **Arka plan (Arda, 17 Ekim 2026: "arka plan çok boş, Mısır Çarşısı / Kapalıçarşı dükkânı içi gibi olsun, biz ön tarafta ayırıyormuşuz gibi"):** `prototype/src/scene.ts`. Arkada dükkânın içi: İznik çini şeridi, tavandan sarkan kuru biber/patlıcan/sarımsak/lif kabağı dizileri, kavanoz-teneke-lokum kutusu dolu raflar, çarşı koridoruna açılan kemerli kapı (gelip geçenler), tepsilerde fiyat çubuklu konik baharat yığınları, çuvallar. Ön tezgâhta kedi, bakır terazi, buharı tüten çay bardağı. Oyun alanının ortası koyulaştırılır ki kavanozlar net okunsun. Uygulamada Skia'ya taşınacak; ileride dükkân seçimine (Kapalıçarşı, Kadıköy…) göre sahne değişecek.
 
+- **Uygulama mimarisi (18 Ekim 2026, 4. aşama):** oyun, Arda'nın revizelerle onayladığı prototip koduyla **aynı**; `prototype/build.mjs` tek bir HTML üretir (`app/src/game/game.gen.ts`, gitignore'da; görseller, sesler ve yazı tipleri gömülü) ve uygulama onu çevrimdışı bir `react-native-webview` içinde açar (köken `https://baharatsort.bagce.dev/`, internete istek yok). Böylece prototipteki her revize uygulamaya birebir geçer; Skia'ya yeniden yazmak ayrı bir iş olarak ertelendi (gerekirse oyun ekranı sonradan taşınır). Köprü (`prototype/src/host.ts` ↔ `app/src/game/bridge.ts`, testli): kayıt telefonda (AsyncStorage; sayfa yüklenmeden `window.__BS_SAVED` ile verilir, her değişiklikte `save` mesajı), titreşim `expo-haptics` (≤15 ms hafif, ≥30 ms uyarı, desen başarı). Reklam/ATT/UMP 7. aşamada aynı köprüden bağlanacak. Uygulamada zorluk bilgisi varsayılan kapalı. MMKV yerine AsyncStorage (tek bir kayıt metni; ek native modül riski yok). Yazı tipleri (Rakkas, Alegreya Sans, OFL) uygulamada gömülü. Simge ve açılış görseli `art.ts` kavanoz çiziminden (gerçek baharat dokularıyla) üretildi.
+- **iOS build:** `.github/workflows/ios.yml` (VapurJam'le birebir, + `pnpm prototype` adımı). Varsayılan dal `claude/sweet-sagan-r89olv` olduğu için tetikleyici `main` **ve** bu dal (`app/**`, `shared/**`, `prototype/**`, lockfile) + elle. Derleme numarası `100 + run_number`. TestFlight'a yükleme için App Store Connect'te `dev.bagce.baharatsort` paket kimlikli uygulama kaydı gerekir (Arda oluşturur).
 - **Repo:** `Ardabagce/BaharatSort` (**public**). Geliştirme dalı `claude/sweet-sagan-r89olv`.
 - **Paket yöneticisi:** pnpm 10, Node 22, `node-linker=hoisted` (Expo/Metro monorepo). VapurJam'le aynı.
 - **Expo SDK 58** (29 Eylül 2026, "güncel SDK"). VapurJam 57'de.
 - **iOS tetikleyicisi (Arda, 17 Ekim 2026: "public repo, build alabilirsin"):** VapurJam'de Mac kotası yüzünden yalnızca elle; public repoda Actions dakikası ücretsiz olduğu için `main`'e `app/**`/`shared/**` değişikliği gelince otomatik + elle. İmzalama, TestFlight yükleme ve sır adları VapurJam'le birebir.
-- **Kayıt:** MMKV (native) + Expo Go'da AsyncStorage'a düşen ince `kv` katmanı (Expo Go'da hızlı deneme kalsın diye).
+- **Kayıt:** AsyncStorage (bkz. uygulama mimarisi; ilk plan MMKV idi).
 - **Bundle ID:** `dev.bagce.baharatsort` (kayıt Arda'da; Apple'da kaydedilince değişmez).
 - **Kapasite:** bir seviyedeki tüm kavanozlar aynı kapasitede (karışık kapasitede "tek renkle dolu" tanımı belirsizleşiyordu).
 - **Dar ağız:** hem alırken hem verirken 1 katman.

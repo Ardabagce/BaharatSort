@@ -39,3 +39,16 @@ CC-BY-SA dosyaların değiştirilmiş hâli de CC-BY-SA'dır).
 | `sfx_calm.mp3`      | [Ambient Relaxing Loop](https://opengameart.org/content/ambient-relaxing-loop) (isaiah658)                                        | Arka plan sesi (yumuşatılmış, uçları birbirine geçirilerek dikişsiz döngü) |
 
 Sesler mono'ya çevrildi (bitiş ezgisi hariç), kırpıldı, ses seviyeleri eşitlendi (ffmpeg `loudnorm`), MP3 64–112 kbps. Önceki çarşı kalabalığı kaydı (bağırışlı) ve gitar ezgisi Arda'nın isteğiyle çıkarıldı (18 Ekim 2026: "çığlık çığlığa", "daha sakin").
+
+## Yazı tipleri (uygulamaya gömülü)
+
+| Dosya                        | Kaynak                                                                                | Lisans                    |
+| ---------------------------- | ------------------------------------------------------------------------------------- | ------------------------- |
+| `fonts/Rakkas-*.woff2`       | [Rakkas](https://fonts.google.com/specimen/Rakkas) (Zeynep Akay)                      | SIL Open Font License 1.1 |
+| `fonts/AlegreyaSans-*.woff2` | [Alegreya Sans](https://fonts.google.com/specimen/Alegreya+Sans) (Huerta Tipográfica) | SIL Open Font License 1.1 |
+
+Yalnızca `latin` ve `latin-ext` (Türkçe harfler) alt kümeleri. Prototip (web) aynı yazı tiplerini Google Fonts'tan yükler.
+
+## Uygulama simgesi ve açılış görseli
+
+`app/assets/icon.png` ve `splash-icon.png`: `prototype/src/art.ts` kavanoz çizimi + yukarıdaki baharat dokuları (lavanta, nane, zerdeçal, pul biber) ve `bg_bazaar.jpg` (bulanık arka plan, CC BY 4.0 Joseolgon). Kodla üretildi.
