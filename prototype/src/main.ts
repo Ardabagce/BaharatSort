@@ -563,8 +563,18 @@ async function animatePour(job: PourJob) {
   if (settings.haptics) vibrate(12);
   const surfaceY =
     dR.top + (CORK_ROOM + TOP + (prev.cap - prev.jars[to]!.layers.length) * LAYER_H) * scale;
+  const newSurfaceY =
+    dR.top + (CORK_ROOM + TOP + (prev.cap - job.after.jars[to]!.layers.length) * LAYER_H) * scale;
   const fall = streamFall(surfaceY - lip.y, pourMs);
-  stream(lip.x - appR.left, lip.y - appR.top, surfaceY - appR.top, spice.id, pourMs, scale);
+  stream(
+    lip.x - appR.left,
+    lip.y - appR.top,
+    surfaceY - appR.top,
+    newSurfaceY - appR.top,
+    spice.id,
+    pourMs,
+    scale,
+  );
   // Kaynak, ağızdan tek parça boşalır; hedef, akış yüzeye varınca tek parça dolar.
   drawJar(from, { drained: job.amount, flowMs: pourMs * 0.8 }, prev);
   drawJar(
@@ -576,7 +586,8 @@ async function animatePour(job: PourJob) {
   await wait(pourMs);
   drawJar(from, {}, job.after);
   if (job.capped) drawJar(to, { corkDrop: true }, job.after);
-  puff(lip.x - appR.left, surfaceY - appR.top, spice.light, scale);
+  // Toz, dolan baharatın yeni yüzeyinde kalkar.
+  puff(lip.x - appR.left, newSurfaceY - appR.top, spice.light, scale);
 
   const back = srcEl.animate(
     [{ transform: tilted }, { transform: 'translate(0,0) rotate(0deg)' }],
@@ -623,11 +634,34 @@ function streamFall(len: number, ms: number) {
 }
 
 /** Ağızdan yüzeye düşen baharat: ince, taneli bir akış; baştan düşer, sonda kopar. */
-function stream(x: number, y0: number, y1: number, spice: number, ms: number, scale: number) {
+function stream(
+  x: number,
+  y0: number,
+  y1: number,
+  /** Döküm bitince yüzey (dolum yükseldikçe taneler daha yukarıda durur). */
+  y1End: number,
+  spice: number,
+  ms: number,
+  scale: number,
+) {
   if (reduced) return;
   const s = SPICES[spice]!;
   const len = Math.max(8, y1 - y0);
   const fall = streamFall(len, ms);
+  // Akışın ucu, hedef doldukça yükselen yüzeyi izler.
+  const riseEnd = (e: SVGElement, attr: string) => {
+    if (y1End >= y1) return;
+    const a = document.createElementNS(NS, 'animate');
+    a.setAttribute('attributeName', attr);
+    a.setAttribute('from', String(y1));
+    a.setAttribute('to', String(y1End));
+    // SMIL zamanı belgenin başından sayılır: şimdiki zamana göre başlat.
+    const now = (fx as unknown as SVGSVGElement).getCurrentTime();
+    a.setAttribute('begin', `${(now + fall / 1000).toFixed(3)}s`);
+    a.setAttribute('dur', `${(Math.max(1, ms - fall) / 1000).toFixed(3)}s`);
+    a.setAttribute('fill', 'freeze');
+    e.appendChild(a);
+  };
   const w = Math.max(2.5, 3.4 * scale);
   const strands = [
     { dx: 0, w, color: s.color, op: 0.85, dash: '' },
@@ -645,6 +679,7 @@ function stream(x: number, y0: number, y1: number, spice: number, ms: number, sc
       'stroke-linecap': 'round',
       opacity: st.op,
     });
+    riseEnd(line, 'y2');
     // Baş: 0 → len düşer; kuyruk: sonda yukarıdan aşağı kopar.
     line.style.strokeDasharray = `${len} ${len * 2}`;
     const head = fall / ms;
@@ -669,6 +704,7 @@ function stream(x: number, y0: number, y1: number, spice: number, ms: number, sc
         'stroke-dasharray': st.dash,
         opacity: 0,
       });
+      riseEnd(g, 'y2');
       g.animate(
         [
           { strokeDashoffset: 0, opacity: 0 },
@@ -690,15 +726,20 @@ function stream(x: number, y0: number, y1: number, spice: number, ms: number, sc
       fill: k % 3 ? s.color : s.light,
     });
     const jitter = (Math.random() - 0.5) * 7 * scale;
+    const delay = (k / n) * ms * 0.75;
+    const dur = fall * (0.9 + Math.random() * 0.3);
+    // Tane, düştüğü anda yüzey ne kadar yükseldiyse orada durur.
+    const p = Math.min(1, Math.max(0, (delay + dur - fall) / Math.max(1, ms - fall)));
+    const yLand = y1 + (y1End - y1) * p;
     d.animate(
       [
         { transform: `translate(${x}px, ${y0}px)`, opacity: 0 },
         { opacity: 1, offset: 0.15 },
-        { transform: `translate(${x + jitter}px, ${y1 - 2}px)`, opacity: 0.85 },
+        { transform: `translate(${x + jitter}px, ${yLand - 2}px)`, opacity: 0.85 },
       ],
       {
-        duration: fall * (0.9 + Math.random() * 0.3),
-        delay: (k / n) * ms * 0.75,
+        duration: dur,
+        delay,
         easing: 'cubic-bezier(.5,0,1,1)',
         fill: 'both',
       },

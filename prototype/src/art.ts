@@ -94,28 +94,39 @@ export function jarSVG(jar: Jar, cap: number, o: JarDrawOpts): string {
   // dikdörtgeniyle birlikte dolar (hedef) ya da boşalır (kaynak).
   const flowN = Math.min(n, o.grown ?? o.drained ?? 0);
   let flow = '';
-  for (let i = 0; i < n; i++) {
-    const c = jar.layers[i]!;
-    const y = yB - (i + 1) * LAYER_H;
+  // Aynı renkten bitişik katmanlar tek parça çizilir (aralarında çizgi yok); gölge çizgisi
+  // yalnızca farklı renkler arasında. Akan katmanların sınırı parçayı böler ama çizgi
+  // eklemez (doku userSpaceOnUse olduğu için iki parça kesintisiz birleşir).
+  const flowFrom = n - flowN;
+  for (let a = 0; a < n;) {
+    const c = jar.layers[a]!;
+    const hidden = a < jar.hidden;
+    let b = a + 1;
+    if (!hidden) while (b < n && b >= jar.hidden && jar.layers[b] === c && b !== flowFrom) b++;
+    const y = yB - b * LAYER_H;
     // En alt katman camın kavisli dibine kadar iner (yoksa altta ince bir boşluk kalıyordu).
-    const h = LAYER_H + (i === 0 ? 6 : 0.6);
-    const hidden = i < jar.hidden;
+    const h = (b - a) * LAYER_H + (a === 0 ? 6 : 0.6);
+    let g: string;
     if (hidden) {
-      layers += `<g><rect x="5" y="${y}" width="54" height="${h}" fill="#5a4334"/><path d="M8 ${y + 4}h48M8 ${y + 12}h48" stroke="#6f5443" stroke-width="1"/><text x="32" y="${y + 15}" text-anchor="middle" font-size="14" font-weight="800" fill="#e6d2b0" font-family="Alegreya Sans, sans-serif">?</text></g>`;
-      continue;
+      g = `<rect x="5" y="${y}" width="54" height="${h}" fill="#5a4334"/><path d="M8 ${y + 4}h48M8 ${y + 12}h48" stroke="#6f5443" stroke-width="1"/><text x="32" y="${y + 15}" text-anchor="middle" font-size="14" font-weight="800" fill="#e6d2b0" font-family="Alegreya Sans, sans-serif">?</text>`;
+    } else {
+      const s = SPICES[c]!;
+      g = `<rect x="5" y="${y}" width="54" height="${h}" fill="url(#tex${c})"/>`;
+      const below = a > 0 ? jar.layers[a - 1] : undefined;
+      // Farklı renk (ya da gizli katman) sınırında hafif gölge.
+      if (a > 0 && (below !== c || a - 1 < jar.hidden))
+        g += `<rect x="6" y="${yB - a * LAYER_H - 2}" width="52" height="2" fill="${s.shade}" opacity="0.35"/>`;
+      // En üstte kavisli yüzey.
+      if (b === n)
+        g += `<path d="M6 ${y + 2} Q32 ${y - 3} 58 ${y + 2}" stroke="${s.light}" stroke-width="2" fill="none" opacity="0.75"/>`;
+      if (o.colorblind) {
+        const dark = s.key === 'salt' || s.key === 'turmeric' || s.key === 'mint';
+        g += `<path d="${SYMBOLS[s.symbol]}" transform="translate(32 ${y + ((b - a) * LAYER_H) / 2}) scale(0.95)" fill="${dark ? '#2a170d' : '#fff8ec'}" stroke="${dark ? '#fff8ec' : '#2a170d'}" stroke-width="0.8"/>`;
+      }
     }
-    const s = SPICES[c]!;
-    let g = `<rect x="5" y="${y}" width="54" height="${h}" fill="url(#tex${c})"/>`;
-    // Katman sınırında hafif gölge, en üstte kavisli yüzey.
-    g += `<rect x="6" y="${y + LAYER_H - 2}" width="52" height="2" fill="${s.shade}" opacity="0.35"/>`;
-    if (i === n - 1)
-      g += `<path d="M6 ${y + 2} Q32 ${y - 3} 58 ${y + 2}" stroke="${s.light}" stroke-width="2" fill="none" opacity="0.75"/>`;
-    if (o.colorblind) {
-      const dark = s.key === 'salt' || s.key === 'turmeric' || s.key === 'mint';
-      g += `<path d="${SYMBOLS[s.symbol]}" transform="translate(32 ${y + LAYER_H / 2}) scale(0.95)" fill="${dark ? '#2a170d' : '#fff8ec'}" stroke="${dark ? '#fff8ec' : '#2a170d'}" stroke-width="0.8"/>`;
-    }
-    if (i >= n - flowN) flow += `<g>${g}</g>`;
+    if (a >= flowFrom && flowN > 0) flow += `<g>${g}</g>`;
     else layers += `<g>${g}</g>`;
+    a = b;
   }
   if (flowN > 0) {
     const top = yB - n * LAYER_H - 5;
