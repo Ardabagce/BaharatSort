@@ -132,9 +132,12 @@ let settings: Settings = {
 };
 let ads: AdCounters = saved.ads ? onNewSession(parseAdCounters(saved.ads)) : DEFAULT_AD_COUNTERS;
 let lastDecision = '–';
+/** Ayarlar'dan bilerek sıfırlandı: uygulama bu kaydı eskisinin üstüne yazabilir (bir kez). */
+let resetPending = false;
 function persist() {
   const data = JSON.stringify({ progress: JSON.stringify(progress), settings, ads, level: levelN });
-  if (inApp) postHost({ type: 'save', data });
+  if (inApp) postHost(resetPending ? { type: 'save', data, reset: true } : { type: 'save', data });
+  resetPending = false;
   try {
     localStorage.setItem(KEY, data);
   } catch {
@@ -1272,6 +1275,7 @@ function openSettings() {
       return;
     }
     resetArmed = false;
+    resetPending = true;
     progress = parseProgress(null, cfg);
     ads = DEFAULT_AD_COUNTERS;
     startLevel(1);

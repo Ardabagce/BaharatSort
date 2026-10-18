@@ -6,7 +6,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
-import { hapticFor, injectSaved, parseHostMessage, type Haptic } from './game/bridge';
+import {
+  hapticFor,
+  injectSaved,
+  parseHostMessage,
+  shouldAcceptSave,
+  type Haptic,
+} from './game/bridge';
 import { GAME_HTML } from './game/game.gen';
 
 /**
@@ -34,12 +40,31 @@ function Game() {
   // undefined: kayıt henüz okunmadı; null: kayıt yok (ilk açılış).
   const [saved, setSaved] = useState<string | null | undefined>(undefined);
   const hidden = useRef(false);
+  // Telefondaki son kayıt. Okunamadıysa (readFailed) bu oturumda hiçbir şey yazılmaz: eski kayıt korunur.
+  const lastSaved = useRef<string | null>(null);
+  const readFailed = useRef(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(SAVE_KEY).then(
-      (v) => setSaved(v),
-      () => setSaved(null),
-    );
+    let cancelled = false;
+    (async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const v = await AsyncStorage.getItem(SAVE_KEY);
+          if (cancelled) return;
+          lastSaved.current = v;
+          setSaved(v);
+          return;
+        } catch {
+          await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+        }
+      }
+      if (cancelled) return;
+      readFailed.current = true;
+      setSaved(null);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const hideSplash = useCallback(() => {
@@ -51,8 +76,13 @@ function Game() {
   const onMessage = useCallback((e: WebViewMessageEvent) => {
     const msg = parseHostMessage(e.nativeEvent.data);
     if (!msg) return;
-    if (msg.type === 'save') AsyncStorage.setItem(SAVE_KEY, msg.data).catch(() => {});
-    else if (msg.type === 'haptic') HAPTICS[hapticFor(msg.pattern)]().catch(() => {});
+    if (msg.type === 'save') {
+      if (readFailed.current) return;
+      // Güncelleme ya da hata ne olursa olsun ilerleme geri gitmez (yalnızca bilerek sıfırlama).
+      if (!shouldAcceptSave(lastSaved.current, msg.data, msg.reset)) return;
+      lastSaved.current = msg.data;
+      AsyncStorage.setItem(SAVE_KEY, msg.data).catch(() => {});
+    } else if (msg.type === 'haptic') HAPTICS[hapticFor(msg.pattern)]().catch(() => {});
   }, []);
 
   if (saved === undefined) return <View style={styles.root} />;

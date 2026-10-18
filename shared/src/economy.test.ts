@@ -227,3 +227,26 @@ describe('uzak ayar', () => {
     expect(strict.ads.interstitialEveryLevels).toBe(5);
   });
 });
+
+describe('kayıt uyumluluğu (güncellemede ilerleme kaybolmaz)', () => {
+  it('eski ya da eksik alanlı kayıtlar okunur, ilerleme korunur', () => {
+    // İlk sürümlerin kaydı: yeni alanlar yok, fazladan bilinmeyen alan var.
+    const old = JSON.stringify({
+      unlocked: 57,
+      coins: 312,
+      owned: {
+        'misir.sign': { styles: [0, 1], selected: 1 },
+        'eskiDukkan.parca': { styles: [0], selected: 0 },
+      },
+      gelecekteEklenecekAlan: true,
+    });
+    const p = parseProgress(old, DEFAULT_CONFIG);
+    expect(p.unlocked).toBe(57);
+    expect(p.coins).toBe(312);
+    expect(p.owned['misir.sign']).toEqual({ styles: [0, 1], selected: 1 });
+    // Tanınmayan parçalar bile silinmez (ileride geri gelebilir).
+    expect(p.owned['eskiDukkan.parca']).toBeDefined();
+    expect(p.boosters).toEqual(DEFAULT_CONFIG.economy.startBoosters);
+    expect(parseProgress(JSON.stringify(p), DEFAULT_CONFIG)).toEqual(p);
+  });
+});

@@ -16,7 +16,7 @@ const w = window as unknown as HostWindow;
 export const inApp = !!w.ReactNativeWebView;
 
 export type HostMessage =
-  | { type: 'save'; data: string }
+  | { type: 'save'; data: string; reset?: boolean }
   | { type: 'haptic'; pattern: number | number[] }
   | { type: 'ready' };
 

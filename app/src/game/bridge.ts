@@ -3,7 +3,7 @@
  * Saf fonksiyonlar; React Native'e bağımlı değil, test edilebilir.
  */
 export type HostMessage =
-  | { type: 'save'; data: string }
+  | { type: 'save'; data: string; reset?: boolean }
   | { type: 'haptic'; pattern: number | number[] }
   | { type: 'ready' };
 
@@ -18,7 +18,9 @@ export function parseHostMessage(raw: string): HostMessage | null {
   if (!m || typeof m !== 'object') return null;
   const o = m as Record<string, unknown>;
   if (o.type === 'save' && typeof o.data === 'string' && o.data.length < 1_000_000)
-    return { type: 'save', data: o.data };
+    return o.reset === true
+      ? { type: 'save', data: o.data, reset: true }
+      : { type: 'save', data: o.data };
   if (o.type === 'haptic') {
     const p = o.pattern;
     if (typeof p === 'number' && Number.isFinite(p)) return { type: 'haptic', pattern: p };
@@ -46,4 +48,34 @@ export function hapticFor(pattern: number | number[]): Haptic {
 /** Sayfa yüklenmeden önce çalışır: telefondaki kaydı oyuna verir. */
 export function injectSaved(saved: string | null): string {
   return `window.__BS_SAVED = ${JSON.stringify(saved)}; true;`;
+}
+
+/** Kayıttan ilerlemenin geri alınamaz kısmı: açılan seviye ve alınan dükkân parçası sayısı. */
+function milestones(save: string | null): { unlocked: number; owned: number } | null {
+  if (!save) return null;
+  try {
+    const outer = JSON.parse(save) as { progress?: unknown };
+    const p = typeof outer.progress === 'string' ? JSON.parse(outer.progress) : outer.progress;
+    if (!p || typeof p !== 'object') return null;
+    const v = p as { unlocked?: unknown; owned?: unknown };
+    const unlocked = typeof v.unlocked === 'number' ? v.unlocked : 0;
+    const owned = v.owned && typeof v.owned === 'object' ? Object.keys(v.owned).length : 0;
+    return { unlocked, owned };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Yeni kayıt telefondakinin üstüne yazılabilir mi? Oyuncu ilerlemesi asla geri gitmez: açılan seviye ya da
+ * alınan parça sayısı azalıyorsa (ör. kayıt okunamadığı için oyun sıfırdan başladıysa) yazılmaz.
+ * Tek istisna, oyuncunun Ayarlar'dan bilerek yaptığı sıfırlama (`reset`).
+ */
+export function shouldAcceptSave(previous: string | null, next: string, reset = false): boolean {
+  if (reset) return true;
+  const a = milestones(previous);
+  const b = milestones(next);
+  if (!b) return false;
+  if (!a) return true;
+  return b.unlocked >= a.unlocked && b.owned >= a.owned;
 }

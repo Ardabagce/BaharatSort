@@ -113,7 +113,9 @@ export function pour(state: GameState, from: number, to: number): PourOutcome {
   const nb: Jar = { ...b, layers: bLayers };
   let capped = false;
   if (isComplete(nb, state.cap)) {
+    // Kapanan kavanozda "?" kalmaz: hepsi aynı baharat, kapakla birlikte açılır.
     nb.capped = true;
+    nb.hidden = 0;
     capped = true;
   }
   jars[to] = nb;
@@ -140,7 +142,10 @@ function unlockCascade(jars: Jar[], cap: number): number[] {
     jars.forEach((j, i) => {
       if (j.lock === null || !done.has(j.lock)) return;
       const nj: Jar = { ...j, lock: null };
-      if (isComplete(nj, cap)) nj.capped = true;
+      if (isComplete(nj, cap)) {
+        nj.capped = true;
+        nj.hidden = 0;
+      }
       jars[i] = nj;
       unlocked.push(i);
       changed = true;
@@ -256,7 +261,10 @@ export function shuffleJars(state: GameState, rng: Rng): GameState {
     const layers = pool.slice(p, p + j.layers.length);
     p += layers.length;
     const nj: Jar = { ...j, layers, hidden: Math.min(j.hidden, Math.max(0, layers.length - 1)) };
-    if (isComplete(nj, state.cap)) nj.capped = true;
+    if (isComplete(nj, state.cap)) {
+      nj.capped = true;
+      nj.hidden = 0;
+    }
     jars[i] = nj;
   }
   unlockCascade(jars, state.cap);

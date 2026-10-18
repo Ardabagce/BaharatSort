@@ -187,4 +187,21 @@ describe('karıştır', () => {
         .join();
     expect(count(a)).toBe(count(s));
   });
+
+  it('kapanan kavanozda gizli katman kalmaz (kazanırken "?" görünmez)', () => {
+    // 1. kavanozun altındaki iki katman gizli ve aynı renk; üstüne dökülünce dolup kapanır.
+    const s0 = createGame({
+      cap: 4,
+      jars: [{ layers: [0, 0] }, { layers: [1, 1, 0, 0], hidden: 2 }, { layers: [1, 1] }],
+    });
+    const p1 = pour(s0, 1, 0);
+    expect(p1.ok).toBe(true);
+    if (!p1.ok) return;
+    const p2 = pour(p1.state, 2, 1);
+    expect(p2.ok && p2.capped).toBe(true);
+    if (!p2.ok) return;
+    expect(p2.state.jars[1]!.hidden).toBe(0);
+    expect(p2.state.jars[0]!.capped).toBe(true);
+    expect(p2.state.jars.every((j) => !j.capped || j.hidden === 0)).toBe(true);
+  });
 });

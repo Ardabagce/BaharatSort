@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hapticFor, injectSaved, parseHostMessage } from './bridge';
+import { hapticFor, injectSaved, parseHostMessage, shouldAcceptSave } from './bridge';
 
 describe('oyun köprüsü', () => {
   it('mesajları doğrular', () => {
@@ -27,5 +27,31 @@ describe('oyun köprüsü', () => {
     new Function('window', js)(w);
     expect(w.__BS_SAVED).toBe('{"a":"</script> "}');
     expect(injectSaved(null)).toContain('= null');
+  });
+
+  it('ilerleme asla geri gitmez (yalnızca bilerek sıfırlama)', () => {
+    const save = (unlocked: number, owned: string[] = []) =>
+      JSON.stringify({
+        progress: JSON.stringify({
+          unlocked,
+          owned: Object.fromEntries(owned.map((k) => [k, { styles: [0], selected: 0 }])),
+        }),
+        level: unlocked,
+      });
+    expect(shouldAcceptSave(null, save(1))).toBe(true);
+    expect(shouldAcceptSave(save(57, ['misir.sign']), save(58, ['misir.sign']))).toBe(true);
+    expect(shouldAcceptSave(save(57), save(57))).toBe(true);
+    // kayıt okunamayıp oyun sıfırdan başladıysa eski kaydın üstüne yazılmaz
+    expect(shouldAcceptSave(save(57, ['misir.sign']), save(1))).toBe(false);
+    expect(shouldAcceptSave(save(57, ['misir.sign']), save(57))).toBe(false);
+    expect(shouldAcceptSave(save(57), 'bozuk')).toBe(false);
+    // bozuk eski kayıt yenisini engellemez; bilerek sıfırlama her zaman geçer
+    expect(shouldAcceptSave('bozuk', save(3))).toBe(true);
+    expect(shouldAcceptSave(save(57), save(1), true)).toBe(true);
+    expect(parseHostMessage('{"type":"save","data":"{}","reset":true}')).toEqual({
+      type: 'save',
+      data: '{}',
+      reset: true,
+    });
   });
 });
