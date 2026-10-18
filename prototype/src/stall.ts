@@ -1,3 +1,5 @@
+import { productOf } from './products';
+
 /**
  * Ana menüdeki dükkân: kemerli bir çarşı dükkânı ve 9 dekorasyon parçası (her biri 3 stil).
  * Alınmamış parça soluk bir taslak ve fiyat etiketiyle görünür; dokununca satın alınır.
@@ -204,9 +206,17 @@ const BASIC: Partial<Record<ItemId, (c: { name: string }) => string>> = {
 };
 
 /** Ana menüdeki uyuyan kedi (yatak varsa üstünde). */
-function cat(onBed: boolean) {
+function cat(onBed: boolean, x = 26) {
   const y = onBed ? 396 : 410;
-  return `<g transform="translate(26 ${y}) scale(.62)"><g class="breath"><path d="M18 58c-4-22 14-34 40-34 24 0 40 10 42 26 1 6-3 8-8 8H24c-4 0-6 0-6 0z" fill="#e2a25c"/><path d="M40 30c6 4 8 10 6 16M60 26c5 5 6 12 3 18M78 30c4 5 4 11 1 16" stroke="#b8763a" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M96 52c10 0 14-6 10-12" stroke="#e2a25c" stroke-width="7" fill="none" stroke-linecap="round"/></g><path d="M10 58c-6-10 0-24 14-24s18 12 14 24z" fill="#e8ad68"/><path d="M12 38l2-12 8 9zM30 35l6-10 2 12z" fill="#e8ad68"/><path d="M16 46q3 2 6 0M28 46q3 2 6 0" stroke="#5b391f" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>`;
+  return `<g transform="translate(${x} ${y}) scale(.62)"><g class="breath"><path d="M18 58c-4-22 14-34 40-34 24 0 40 10 42 26 1 6-3 8-8 8H24c-4 0-6 0-6 0z" fill="#e2a25c"/><path d="M40 30c6 4 8 10 6 16M60 26c5 5 6 12 3 18M78 30c4 5 4 11 1 16" stroke="#b8763a" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M96 52c10 0 14-6 10-12" stroke="#e2a25c" stroke-width="7" fill="none" stroke-linecap="round"/></g><path d="M10 58c-6-10 0-24 14-24s18 12 14 24z" fill="#e8ad68"/><path d="M12 38l2-12 8 9zM30 35l6-10 2 12z" fill="#e8ad68"/><path d="M16 46q3 2 6 0M28 46q3 2 6 0" stroke="#5b391f" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>`;
+}
+
+/** Kedi: yatağı/kulübesi varsa üstünde; köşede başka bir ürün varsa (mangal, bisiklet…) zeminin sağında. */
+function catFor(shop: string, hasCorner: boolean) {
+  const p = productOf(shop, 'catBed');
+  if (!hasCorner) return cat(false);
+  if (!p || p.catOn) return cat(true);
+  return cat(false, 290);
 }
 
 export interface StallState {
@@ -227,7 +237,7 @@ export function stallSVG(st: StallState, woodUri: string, counterUri: string): s
       const basic = BASIC[id];
       return basic ? `<g class="basic">${basic({ name: st.shopName })}</g>` : '';
     }
-    return `<g class="part" data-item="${id}">${ART[id](style, { name: st.shopName })}</g>`;
+    return `<g class="part" data-item="${id}">${drawItem(st.shop, id, style, st.shopName)}</g>`;
   };
   const focus = st.focus
     ? `<g class="focus" transform="translate(${ANCHORS[st.focus][0]} ${ANCHORS[st.focus][1]})"><circle r="34" fill="rgba(255,196,107,.18)" stroke="#ffc46b" stroke-width="2.5" stroke-dasharray="7 5"/></g>`
@@ -243,13 +253,20 @@ export function stallSVG(st: StallState, woodUri: string, counterUri: string): s
 <path d="M38 440V120a162 110 0 0 1 324 0V440" fill="none" stroke="${tone.arch}" stroke-width="10"/>
 <path d="M38 440V120a162 110 0 0 1 324 0V440" fill="none" stroke="#2a170d" stroke-width="2" stroke-dasharray="14 10" opacity=".35"/>
 <rect x="0" y="430" width="400" height="20" fill="${tone.floor}"/>
-${part('shelves')}${part('jarSet')}${part('lamps')}${part('counter')}${part('rug')}${part('vitrine')}${part('scale')}${part('catBed')}${cat(has('catBed'))}${part('sign')}
+${part('shelves')}${part('jarSet')}${part('lamps')}${part('counter')}${part('rug')}${part('vitrine')}${part('scale')}${part('catBed')}${catFor(st.shop, has('catBed'))}${part('sign')}
 ${focus}
 </svg>`;
 }
 
+/** Parçanın çizimi: dükkâna özgü ürün varsa o (products.ts), yoksa Mısır Çarşısı'nın ilk tasarımı. */
+function drawItem(shop: string, id: ItemId, style: number, name: string) {
+  const p = productOf(shop, id);
+  return p ? p.draw(style, { name }) : ART[id](style, { name });
+}
+
 export const STYLE_COUNT = 3;
 export function styleSwatch(
+  shop: string,
   id: ItemId,
   style: number,
   shopName: string,
@@ -260,7 +277,7 @@ export function styleSwatch(
   const [x, y] = ANCHORS[id];
   const w = 170;
   const h = 120;
-  return `<svg viewBox="${Math.max(0, x - w / 2)} ${Math.max(0, y - h / 2)} ${w} ${h}" class="swatch-svg"><defs><pattern id="stWood" patternUnits="userSpaceOnUse" width="200" height="50"><image href="${woodUri}" width="200" height="50" preserveAspectRatio="none"/></pattern><pattern id="stCounter" patternUnits="userSpaceOnUse" width="150" height="150"><image href="${counterUri}" width="150" height="150"/></pattern><radialGradient id="stGlow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient></defs><rect x="0" y="0" width="400" height="450" fill="#3a2418"/>${ART[id](style, { name: shopName })}</svg>`;
+  return `<svg viewBox="${Math.max(0, x - w / 2)} ${Math.max(0, y - h / 2)} ${w} ${h}" class="swatch-svg"><defs><pattern id="stWood" patternUnits="userSpaceOnUse" width="200" height="50"><image href="${woodUri}" width="200" height="50" preserveAspectRatio="none"/></pattern><pattern id="stCounter" patternUnits="userSpaceOnUse" width="150" height="150"><image href="${counterUri}" width="150" height="150"/></pattern><radialGradient id="stGlow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient></defs><rect x="0" y="0" width="400" height="450" fill="#3a2418"/>${drawItem(shop, id, style, shopName)}</svg>`;
 }
 
 export type { Draw };

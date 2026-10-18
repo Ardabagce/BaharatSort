@@ -85,6 +85,7 @@ import {
 } from './audio';
 import { mapHTML } from './map';
 import { propsSVG } from './scene';
+import { productName, productStyleName } from './products';
 import { ANCHORS, ITEM_ORDER, stallSVG, styleSwatch, type ItemId } from './stall';
 import { getLang, setLang, t, type Lang } from './strings';
 
@@ -1351,6 +1352,14 @@ const today = () => new Date().toLocaleDateString('sv');
 let viewShop = progress.activeShop;
 let focusItem: ItemId | null = null;
 
+/** Dükkâna özgü ürün adı (Mısır Çarşısı'nda genel adlar). */
+function itemName(shop: string, id: ItemId) {
+  return productName(shop, id, getLang()) ?? t(`item_${id}` as never);
+}
+function styleName(shop: string, id: ItemId, style: number) {
+  return productStyleName(shop, id, style, getLang()) ?? t(`style_${id}_${style}` as never);
+}
+
 function shopName(id: string) {
   return t(`shop_${id}` as never);
 }
@@ -1482,7 +1491,7 @@ function decorCards(shop: string, owned: Partial<Record<ItemId, number>>) {
       const id = it.id as ItemId;
       const has = owned[id] !== undefined;
       const afford = progress.coins >= it.price;
-      return `<button class="decor-card${has ? ' owned' : afford ? ' afford' : ''}" data-item="${id}">${styleSwatch(id, has ? owned[id]! : 0, shopName(shop), WOOD_URI, COUNTER_URI)}<span class="dn">${t(`item_${id}` as never)}</span>${has ? `<span class="dp ok">✓</span>` : `<span class="dp"><i></i>${it.price}</span>`}</button>`;
+      return `<button class="decor-card${has ? ' owned' : afford ? ' afford' : ''}" data-item="${id}">${styleSwatch(shop, id, has ? owned[id]! : 0, shopName(shop), WOOD_URI, COUNTER_URI)}<span class="dn">${itemName(shop, id)}</span>${has ? `<span class="dp ok">✓</span>` : `<span class="dp"><i></i>${it.price}</span>`}</button>`;
     })
     .join('');
 }
@@ -1507,7 +1516,7 @@ async function buyItem(shop: string, item: ItemId) {
   const price = cfg.economy.shops
     .find((s) => s.id === shop)!
     .items.find((i) => i.id === item)!.price;
-  const name = t(`item_${item}` as never);
+  const name = itemName(shop, item);
   if (progress.coins >= price) {
     const v = veil(`<div class="card"><h2>${name}</h2><p>${t('buyItemBody', { p: price })}</p>
       <div class="stack"><button class="btn primary" id="bBuy">${t('buyItem', { p: price })}</button><button class="btn plain" id="bNo">${t('cancel')}</button></div></div>`);
@@ -1557,11 +1566,11 @@ function openStyles(shop: string, item: ItemId) {
     .map((st) => {
       const has = own.styles.includes(st);
       const sel = own.selected === st;
-      return `<button class="style-card${sel ? ' sel' : ''}" data-style="${st}">${styleSwatch(item, st, shopName(shop), WOOD_URI, COUNTER_URI)}<span>${t(`style_${item}_${st}` as never)}</span><small>${sel ? t('inUse') : has ? t('use') : `${price} ${t('gold')}`}</small></button>`;
+      return `<button class="style-card${sel ? ' sel' : ''}" data-style="${st}">${styleSwatch(shop, item, st, shopName(shop), WOOD_URI, COUNTER_URI)}<span>${styleName(shop, item, st)}</span><small>${sel ? t('inUse') : has ? t('use') : `${price} ${t('gold')}`}</small></button>`;
     })
     .join('');
   const v = veil(
-    `<div class="card sheet"><h2>${t(`item_${item}` as never)}</h2><p>${t('styleBody')}</p><div class="styles">${cards}</div><button class="btn plain" id="sClose">${t('close')}</button></div>`,
+    `<div class="card sheet"><h2>${itemName(shop, item)}</h2><p>${t('styleBody')}</p><div class="styles">${cards}</div><button class="btn plain" id="sClose">${t('close')}</button></div>`,
   );
   v.querySelector('#sClose')!.addEventListener('click', () => openHome());
   v.querySelector('.styles')!.addEventListener('click', (e) => {
