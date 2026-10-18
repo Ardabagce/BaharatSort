@@ -339,7 +339,7 @@ for (const [locale, dir] of Object.entries(SHOT_LOCALE)) {
   }
 }
 
-step('Build: TestFlight'taki en yeni geçerli 1.0 derlemesini sürüme bağla');
+step("Build: TestFlight'taki en yeni geçerli 1.0 derlemesini sürüme bağla");
 const builds =
   (
     await asc(
@@ -347,7 +347,8 @@ const builds =
       `/v1/builds?filter[app]=${app.id}&filter[preReleaseVersion.version]=${meta.version}&filter[processingState]=VALID&sort=-uploadedDate&limit=1&fields[builds]=version,uploadedDate`,
     )
   ).json?.data ?? [];
-if (!builds[0]) console.log('  · henüz işlenmiş derleme yok (TestFlight işlemesi bitince tekrar çalıştır)');
+if (!builds[0])
+  console.log('  · henüz işlenmiş derleme yok (TestFlight işlemesi bitince tekrar çalıştır)');
 else
   must(
     await asc('PATCH', `/v1/appStoreVersions/${version.id}/relationships/build`, {
