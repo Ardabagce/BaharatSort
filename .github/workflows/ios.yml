@@ -28,8 +28,8 @@ jobs:
   build:
     runs-on: macos-26
     timeout-minutes: 90
-    # Sırlar bu adlı ortamın (Environment) altında da durabilir; "Repository secrets"teyse bu satır zararsız.
-    environment: APPSTORE_API_KEY_P8
+    # Sırlar depoda "Appstore" ortamının (Settings › Environments) altında; ortam verilmezse iş onları göremez.
+    environment: Appstore
     env:
       P8: ${{ github.event_name != 'pull_request' && secrets.APPSTORE_API_KEY_P8 || '' }}
       KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
