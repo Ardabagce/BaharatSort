@@ -1,5 +1,5 @@
 /**
- * Uygulamaya gömülü 300 seviyeyi üretir: `pnpm levels`.
+ * Uygulamaya gömülü 1000 seviyeyi üretir: `pnpm levels`.
  * Çıktı deterministiktir; test, dosyanın üreticiyle birebir aynı olduğunu ve her seviyenin
  * güçlendiricisiz çözülebildiğini doğrular. Ayrıca docs/levels.md dağılım raporunu yazar.
  */

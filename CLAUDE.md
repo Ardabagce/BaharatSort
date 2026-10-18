@@ -19,7 +19,7 @@ sıralama bulmacası ve kendi sunucumuzda çalışan backend'i. Altyapı VapurJa
 
 0. VapurJam incelemesi → `docs/from-vapurjam.md` ✅
 1. Monorepo iskeleti (pnpm: app, server, shared, scripts), lint/format, vitest, CI ✅
-2. `shared`: kural motoru, üretici, çözücü, testler, 300 seviye → `docs/levels.md` ✅
+2. `shared`: kural motoru, üretici, çözücü, testler, 1000 seviye → `docs/levels.md` ✅
 3. Ekonomi config'i + denge simülasyonu → `docs/balance-report.md` ✅ (Arda'nın onayını bekliyor)
 4. `app`: oynanabilir çekirdek (döküm animasyonu, ses, titreşim, kazanma/kilitlenme, renk körü, reklam simülatörü)
 5. Seviye haritası, dükkân/dekorasyon, günlük hediye, güçlendiriciler
@@ -28,7 +28,7 @@ sıralama bulmacası ve kendi sunucumuzda çalışan backend'i. Altyapı VapurJa
 8. Günün bulmacası, cilalama, hata durumları
 9. Mağaza hazırlığı
 
-Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HTML üretir (`prototype/dist/baharat-sort.html`, aynı `shared` motoru, aynı 300 seviye). Yayımlanmış hali: https://claude.ai/artifact/BchsrPEw85FfRRVW3fhP9f (aynı dosya yolundan yeniden yayımlanır). Prototipte seviyeler sırayla açılır (geçilmemiş olanlar haritada asma kilitli), reklamlar simülasyon. Çizim ölçüleri (`prototype/src/art.ts`) uygulamadaki Skia çizimine taşınacak.
+Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HTML üretir (`prototype/dist/baharat-sort.html`, aynı `shared` motoru, aynı 1000 seviye). Yayımlanmış hali: https://claude.ai/artifact/BchsrPEw85FfRRVW3fhP9f (aynı dosya yolundan yeniden yayımlanır). Prototipte seviyeler sırayla açılır (geçilmemiş olanlar haritada asma kilitli), reklamlar simülasyon. Çizim ölçüleri (`prototype/src/art.ts`) uygulamadaki Skia çizimine taşınacak.
 
 ## Yapı
 
@@ -46,7 +46,7 @@ Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HT
 pnpm install
 pnpm check        # format + lint + typecheck + test (CI ile aynı)
 pnpm test         # yalnızca vitest
-pnpm levels       # gömülü 300 seviyeyi ve docs/levels.md'yi yeniden üret (~80 sn)
+pnpm levels       # gömülü 1000 seviyeyi ve docs/levels.md'yi yeniden üret (~7,5 dk)
 pnpm balance      # denge simülasyonu → docs/balance-report.md
 ```
 
@@ -70,11 +70,11 @@ pnpm balance      # denge simülasyonu → docs/balance-report.md
 
 - RNG: mulberry32 (`createRng`), yalnızca tamsayı işlemleri → uygulama/sunucu aynı sonucu üretir. Seviye n'in seed'i `baharat:n:<aday>`, günün bulmacası `daily:YYYY-MM-DD:<aday>`.
 - Üretim: şekil (renk sayısı, kapasite, öğeler) → doldurma (1–4. seviyeler çözülmüş durumdan geri dökümlerle karıştırılır, sonrası rastgele) → öğeler → **çözücüyle doğrulama**. Çözülemeyen aday asla seçilmez. 8 aday arasından hedef zorluğa en yakını alınır.
-- **Çözücü:** A\* + kanonik durum anahtarı (kavanoz sırası önemsiz; tür ve içerik önemli) + simetri budaması (aynı türden ikinci boş kavanoz, tek renkli kavanozu boşa aktarma). Sezgisel kabul edilebilir ve tutarlı: farklı renk üstündeki her dizi en az bir kez taşınır + birden çok kavanozun dibindeki bir renk için fazlalık. Bu yüzden bulunan çözüm **en kısadır** (testte kaba kuvvet BFS ile doğrulanır). Bütçe aşılırsa ağırlıklı A\* ile en azından çözülebilirlik doğrulanır (`exact: false`). Pratikte 300 seviyenin hepsi kesin çözüldü, toplam üretim ~80 sn.
+- **Çözücü:** A\* + kanonik durum anahtarı (kavanoz sırası önemsiz; tür ve içerik önemli) + simetri budaması (aynı türden ikinci boş kavanoz, tek renkli kavanozu boşa aktarma). Sezgisel kabul edilebilir ve tutarlı: farklı renk üstündeki her dizi en az bir kez taşınır + birden çok kavanozun dibindeki bir renk için fazlalık. Bu yüzden bulunan çözüm **en kısadır** (testte kaba kuvvet BFS ile doğrulanır). Bütçe aşılırsa ağırlıklı A\* ile en azından çözülebilirlik doğrulanır (`exact: false`). Pratikte 1000 seviyenin 999'u kesin çözüldü (1'i ağırlıklı A\* ile doğrulandı), toplam üretim ~7,5 dk.
 - **Ölçümler:** en kısa çözüm, çözüm yolu boyunca ortalama anlamlı hamle (dallanma), **çıkmaz oranı** (40 oyunluk "rastgele" bot: anlamlı hamlelerden rastgele, %60 aynı renge dökmeyi tercih eder, son dökümü geri almaz; anlamlı hamle kalmazsa kilitlenmiş sayılır), gizli katman, renk/kavanoz oranı.
 - **Zorluk skoru (1–10):** `ham = enKısa × log2(1+dallanma) × (1+2.5·çıkmaz) × (1+1.2·gizliOranı) × (0.6+renk/kavanoz) × (1+öğe ağırlıkları)`, `1 + 9·ham/(ham+140)`.
 - **Eğri (testere dişi, `levelKind`, `targetDifficulty`, eşikler `config.difficulty`):** 1–10 eğitici (hedef 1.2→2, 5 ve 10 rozetli ama yumuşak). Normal hedef 3,5 → 8 (11→200, sonra 8'de sabit; Arda, 18 Ekim 2026: "seviye seviye daha zorlaştır"). Renk sayısı 5'ten başlar, her 20 seviyede +1 (en fazla 9). Tek boş kavanoz: çok zorlarda (40+) %70, zorlarda (60+) %35 olasılıkla. Her 5. seviye zor (+1.3), her 20. çok zor (+2.5), zordan hemen sonraki rahatlatıcı (−1). Yeni öğeler 11/21/31/41'de tanıtılır; bu seviyeler zaten rahatlatıcıdır ve en fazla 5 renklidir.
-- Gömülü 300 seviye `shared/src/levels/builtin.json` (~130 KB), repoda durur (çevrimdışı). Üretici değişince `pnpm levels`. Test: her seviyenin çözümü oynatılıp kazandırdığı, her 23. seviyenin yeniden üretilince birebir aynı olduğu, zor > normal > rahatlatıcı ortalamaları.
+- Gömülü **1000 seviye** (Arda, 18 Ekim 2026: "build'den önce bölüm sayısını 1000'e tamamla") `shared/src/levels/builtin.json` (~490 KB), repoda durur (çevrimdışı). Seviye n yalnızca kendi seed'inden üretildiği için sayıyı artırmak önceki seviyeleri değiştirmez (ilk 300 birebir aynı kaldı). 200'den sonra hedef 8'de sabit; çeşitlilik 20'lik tema blokları ve testere dişinden gelir. Haritada 34 gerçek İstanbul çarşı sokağı (her biri 30 seviye, Eminönü'nden Büyükada'ya). Denge simülasyonu ilk 300 seviyede ölçülür (5 dükkân ~140'ta biter). Üretici değişince `pnpm levels`. Test: her seviyenin çözümü oynatılıp kazandırdığı, her 23. seviyenin yeniden üretilince birebir aynı olduğu, zor > normal > rahatlatıcı ortalamaları.
 - Zorluk eşikleri config'ten gelir ama gömülü seviyeler build anında üretilir; uzaktan değişiklik yalnızca sunucunun ürettiği yeni paketleri ve günün bulmacasını etkiler. Çalışma anında etkili olan eşik: `stuckHintAfter`.
 - **Takılınca:** aynı seviyede 3 kilitlenme → sonraki denemede ipucu düğmesi parlar, bir ipucu ücretsiz. Seviye zorluğu gizlice düşürülmez.
 

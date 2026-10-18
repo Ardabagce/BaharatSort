@@ -5,7 +5,10 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_CONFIG } from '@baharat-sort/shared';
-import { BUILTIN_LEVELS } from '@baharat-sort/shared/levels';
+import { BUILTIN_LEVELS as ALL_LEVELS } from '@baharat-sort/shared/levels';
+
+/** Denge ilk 300 seviyede ölçülür: 5 dükkân ~140. seviyede biter, sonrası ek stiller. */
+const BUILTIN_LEVELS = ALL_LEVELS.slice(0, 300);
 import { PROFILES } from './profiles';
 import { checks, renderReport, summarize } from './report';
 import { simulatePlayer } from './sim';

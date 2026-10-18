@@ -14,7 +14,7 @@ const f1 = (x: number) => x.toFixed(1);
 /** Zorluk dağılımı ve eğri: docs/levels.md. */
 export function levelReport(levels: LevelDef[], target: (n: number) => number): string {
   const lines: string[] = [];
-  lines.push('# Gömülü 300 seviye: zorluk dağılımı', '');
+  lines.push(`# Gömülü ${levels.length} seviye: zorluk dağılımı`, '');
   lines.push('`pnpm levels` ile üretilir (shared/scripts/generate-levels.ts). Elle düzenleme.', '');
   lines.push('## Türlere göre', '');
   lines.push(

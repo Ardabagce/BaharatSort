@@ -58,7 +58,7 @@ function playSolution(level: LevelDef) {
   expect(isWon(s)).toBe(true);
 }
 
-describe('gömülü 300 seviye', () => {
+describe(`gömülü ${BUILTIN_LEVEL_COUNT} seviye`, () => {
   it(`${BUILTIN_LEVEL_COUNT} seviye var, sıralı`, () => {
     expect(BUILTIN_LEVELS).toHaveLength(BUILTIN_LEVEL_COUNT);
     BUILTIN_LEVELS.forEach((l, i) => expect(l.n).toBe(i + 1));

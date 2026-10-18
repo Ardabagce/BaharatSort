@@ -2,20 +2,44 @@ import type { LevelDef } from '../../shared/src/types';
 
 /**
  * Seviye haritası: çarşı içinden aşağıdan yukarı kıvrılan bir yol. Her 30 seviye gerçek bir
- * İstanbul çarşı sokağı; başında mavi emaye sokak tabelası (İstanbul'un gerçek tabela stili).
+ * İstanbul çarşı sokağı (34 sokak = 1000 seviye, Eminönü'nden Adalar'a); başında mavi emaye sokak tabelası (İstanbul'un gerçek tabela stili).
  */
 
 export const STREETS = [
   { name: 'Hasırcılar Caddesi', district: 'Eminönü' },
   { name: 'Tahtakale Caddesi', district: 'Eminönü' },
+  { name: 'Tahmis Sokağı', district: 'Eminönü' },
+  { name: 'Hamidiye Caddesi', district: 'Eminönü' },
+  { name: 'Kantarcılar Caddesi', district: 'Eminönü' },
+  { name: 'Sultan Hamamı Caddesi', district: 'Eminönü' },
   { name: 'Uzunçarşı Caddesi', district: 'Fatih' },
   { name: 'Mahmutpaşa Yokuşu', district: 'Fatih' },
   { name: 'Çakmakçılar Yokuşu', district: 'Fatih' },
+  { name: 'Tığcılar Sokağı', district: 'Fatih' },
+  { name: 'Çadırcılar Caddesi', district: 'Fatih' },
+  { name: 'Örücüler Caddesi', district: 'Fatih' },
   { name: 'Kalpakçılar Caddesi', district: 'Kapalıçarşı' },
   { name: 'Kuyumcular Caddesi', district: 'Kapalıçarşı' },
   { name: 'Sandal Bedesteni Sokağı', district: 'Kapalıçarşı' },
   { name: 'Yağlıkçılar Caddesi', district: 'Kapalıçarşı' },
   { name: 'Fesçiler Caddesi', district: 'Kapalıçarşı' },
+  { name: 'Halıcılar Caddesi', district: 'Kapalıçarşı' },
+  { name: 'Aynacılar Sokağı', district: 'Kapalıçarşı' },
+  { name: 'Takkeciler Sokağı', district: 'Kapalıçarşı' },
+  { name: 'Zenneciler Sokağı', district: 'Kapalıçarşı' },
+  { name: 'Perdahçılar Sokağı', district: 'Kapalıçarşı' },
+  { name: 'Güneşlibahçe Sokağı', district: 'Kadıköy' },
+  { name: 'Serasker Caddesi', district: 'Kadıköy' },
+  { name: 'Bahariye Caddesi', district: 'Kadıköy' },
+  { name: 'Mühürdar Caddesi', district: 'Kadıköy' },
+  { name: 'Hakimiyet-i Milliye Caddesi', district: 'Üsküdar' },
+  { name: 'Ortabahçe Caddesi', district: 'Beşiktaş' },
+  { name: 'Şahne Sokağı', district: 'Beyoğlu' },
+  { name: 'Galip Dede Caddesi', district: 'Beyoğlu' },
+  { name: 'Yeni Cami Caddesi', district: 'Eminönü' },
+  { name: 'Ragıp Gümüşpala Caddesi', district: 'Eminönü' },
+  { name: 'Çarşı Caddesi', district: 'Büyükada' },
+  { name: 'İskele Meydanı', district: 'Büyükada' },
 ];
 export const STREET_LEN = 30;
 
