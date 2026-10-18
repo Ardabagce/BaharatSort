@@ -62,6 +62,12 @@ import {
   TOP,
 } from './art';
 import { hostSaved, inApp, postHost } from './host';
+
+/**
+ * Reklamlar: prototipte simülasyon. Uygulamada gerçek reklamlar (7. aşama) gelene kadar hiç reklam yok:
+ * reklam düğmeleri, banner yeri ve geçiş reklamı görünmez (Apple yer tutucu reklamı kabul etmez).
+ */
+const ADS = !inApp;
 import {
   audio,
   sfxCoins,
@@ -962,7 +968,7 @@ function buySheet(k: BoosterKind): Promise<boolean> {
       <h2>${t('buyTitle', { name: boosterName(k) })}</h2>
       <p>${t('buyBody')}</p>
       <div class="stack">
-        <button class="btn ad" id="bAd">${t('buyAd')}</button>
+        ${ADS ? `<button class="btn ad" id="bAd">${t('buyAd')}</button>` : ''}
         <button class="btn primary" id="bCoins" ${short > 0 ? 'disabled' : ''}>${t('buyCoins', { p: price })}${short > 0 ? ` <small>· ${t('buyShort', { s: short })}</small>` : ''}</button>
         <button class="btn plain" id="bNo">${t('cancel')}</button>
       </div></div>`);
@@ -982,7 +988,7 @@ function buySheet(k: BoosterKind): Promise<boolean> {
         resolve(true);
       } else resolve(false);
     });
-    v.querySelector('#bAd')!.addEventListener('click', async () => {
+    v.querySelector('#bAd')?.addEventListener('click', async () => {
       closeVeil();
       const r = await rewardedAd();
       if (r === 'rewarded') resolve(await applyBooster(k));
@@ -1014,7 +1020,9 @@ async function goNextLevel() {
   closeVeil();
   const d = decideInterstitial(cfg.ads, ads, levelN, Date.now());
   lastDecision = d.show ? 'göster' : d.reason;
-  if (d.show) {
+  if (!ADS) {
+    // reklam yok
+  } else if (d.show) {
     if (await interstitialAd()) ads = onInterstitialShown(ads, Date.now());
   } else if (d.reason === 'rewarded-grace') {
     ads = onInterstitialSkipped(ads);
@@ -1032,7 +1040,7 @@ function showWinCard(r: { first: boolean; base: number; bonus: number }) {
       <h2>${t('winTitle')}</h2><p>${t('winBody')}</p>
       <div class="lines">${lines}</div>
       <div class="stack">
-        ${r.first && r.base > 0 ? `<button class="btn ad" id="wAd">${t('doubleAd')}</button>` : ''}
+        ${ADS && r.first && r.base > 0 ? `<button class="btn ad" id="wAd">${t('doubleAd')}</button>` : ''}
         <button class="btn primary" id="wNext">${t('next')}</button>
         <button class="btn plain" id="wShop">${t('toShop')}</button>
       </div></div>`);
@@ -1069,12 +1077,12 @@ function stuck() {
   const v = veil(`<div class="card">
     <h2>${t('stuckTitle')}</h2><p>${t('stuckBody')}</p>
     <div class="stack">
-      <button class="btn ad" id="sAd">${t('stuckAd')}</button>
+      ${ADS ? `<button class="btn ad" id="sAd">${t('stuckAd')}</button>` : ''}
       <button class="btn primary" id="sShuffle">${t('stuckShuffle')} <small>· ${sh > 0 ? sh : `${cfg.economy.boosterPrice.shuffle} ${t('gold')}`}</small></button>
       <button class="btn plain" id="sUndo" ${canUndo(session) ? '' : 'disabled'}>${t('stuckUndo')} <small>· ${progress.boosters.undo > 0 ? progress.boosters.undo : `${cfg.economy.boosterPrice.undo} ${t('gold')}`}</small></button>
       <button class="btn plain" id="sRestart">${t('restart')}</button>
     </div></div>`);
-  v.querySelector('#sAd')!.addEventListener('click', async () => {
+  v.querySelector('#sAd')?.addEventListener('click', async () => {
     closeVeil();
     const r = await rewardedAd();
     if (r === 'rewarded') {
@@ -1210,17 +1218,21 @@ function openSettings() {
     <h2>${t('settings')}</h2>
     ${tog('sound', t('sound'))}${tog('music', t('music'))}${tog('haptics', t('haptics'))}${tog('colorblind', t('colorblind'))}
     <div class="toggle"><span>${t('language')}</span><div class="seg"><button id="lTr" aria-pressed="${settings.lang === 'tr'}">TR</button><button id="lEn" aria-pressed="${settings.lang === 'en'}">EN</button></div></div>
-    <h3>${t('dev')}</h3><p>${t('foot')}</p>
+    ${
+      inApp
+        ? ''
+        : `<h3>${t('dev')}</h3><p>${t('foot')}</p>
     ${tog('showInfo', t('showInfo'))}${tog('adFail', t('adFail'))}
-    <div class="dev">${t('devCounters', { s: ads.session, l: ads.levelsSinceLast, h: hour, d: lastDecision })}</div>
+    <div class="dev">${t('devCounters', { s: ads.session, l: ads.levelsSinceLast, h: hour, d: lastDecision })}</div>`
+    }
     <div class="stack">
-      <button class="btn plain" id="dSession">${t('newSession')}</button>
-      <button class="btn plain" id="dAds">${t('resetAds')}</button>
+      ${inApp ? '' : `<button class="btn plain" id="dSession">${t('newSession')}</button>`}
+      ${inApp ? '' : `<button class="btn plain" id="dAds">${t('resetAds')}</button>`}
       <button class="btn plain" id="dReset">${t('resetAll')}</button>
       <button class="btn primary" id="dClose">${t('close')}</button>
     </div></div>`);
   for (const id of ['sound', 'music', 'haptics', 'colorblind', 'showInfo', 'adFail'] as const) {
-    v.querySelector<HTMLInputElement>(`#s_${id}`)!.addEventListener('change', (e) => {
+    v.querySelector<HTMLInputElement>(`#s_${id}`)?.addEventListener('change', (e) => {
       settings = { ...settings, [id]: (e.target as HTMLInputElement).checked };
       audio.sound = settings.sound;
       audio.music = settings.music;
@@ -1242,12 +1254,12 @@ function openSettings() {
   };
   v.querySelector('#lTr')!.addEventListener('click', setL('tr'));
   v.querySelector('#lEn')!.addEventListener('click', setL('en'));
-  v.querySelector('#dSession')!.addEventListener('click', () => {
+  v.querySelector('#dSession')?.addEventListener('click', () => {
     ads = onNewSession(ads);
     persist();
     openSettings();
   });
-  v.querySelector('#dAds')!.addEventListener('click', () => {
+  v.querySelector('#dAds')?.addEventListener('click', () => {
     ads = { ...DEFAULT_AD_COUNTERS, session: ads.session };
     lastDecision = '–';
     persist();
@@ -1362,7 +1374,7 @@ function openHome() {
       <button class="btn primary play" id="hPlay"><span>${t('play')}</span><small>${t('level', { n: Math.min(BUILTIN_LEVELS.length, progress.unlocked) })}</small></button>
       <button class="btn plain" id="hMap">${t('levels')}</button>
     </div>
-    <div class="banner-mock">${t('bannerMock')}</div>`;
+    ${ADS ? `<div class="banner-mock">${t('bannerMock')}</div>` : ''}`;
   app.appendChild(h);
   h.querySelector('#hPlay')!.addEventListener('click', () => {
     unlock();
@@ -1489,7 +1501,7 @@ async function buyItem(shop: string, item: ItemId) {
     return;
   }
   const short = topUpShortfall(progress, cfg, price);
-  if (short !== null && coinAdsLeft(progress, cfg, today()) > 0) {
+  if (ADS && short !== null && coinAdsLeft(progress, cfg, today()) > 0) {
     const v = veil(`<div class="card"><h2>${name}</h2><p>${t('shortBody', { s: short })}</p>
       <div class="stack"><button class="btn ad" id="bAd">${t('topUpAd', { s: short })}</button><button class="btn plain" id="bNo">${t('cancel')}</button></div></div>`);
     v.querySelector('#bNo')!.addEventListener('click', closeVeil);
@@ -1560,7 +1572,7 @@ function openGift() {
     .join('');
   const v =
     veil(`<div class="card"><h2>${t('dailyGift')}</h2><div class="days">${days}</div><p>${t('giftBody', { n: r.reward })}</p>
-    <div class="stack">${canAd ? `<button class="btn ad" id="gAd">${t('giftAd', { n: r.reward })}</button>` : ''}<button class="btn primary" id="gOk">${t('great')}</button></div></div>`);
+    <div class="stack">${ADS && canAd ? `<button class="btn ad" id="gAd">${t('giftAd', { n: r.reward })}</button>` : ''}<button class="btn primary" id="gOk">${t('great')}</button></div></div>`);
   v.querySelector('#gOk')!.addEventListener('click', () => openHome());
   v.querySelector('#gAd')?.addEventListener('click', async () => {
     const res = await rewardedAd();

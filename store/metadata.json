@@ -1,6 +1,7 @@
 {
   "bundleId": "dev.bagce.baharatsort",
   "version": "1.0",
+  "hasAds": false,
   "copyright": "2026 Arda Bağce",
   "contentRights": "USES_THIRD_PARTY_CONTENT",
   "category": { "primary": "GAMES", "sub1": "GAMES_PUZZLE", "sub2": "GAMES_CASUAL" },

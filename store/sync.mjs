@@ -72,7 +72,7 @@ for (const [locale, L] of Object.entries(meta.locales)) {
   );
 }
 
-step('Yaş derecesi (her şey Yok/Hayır; reklam var)');
+step(`Yaş derecesi (her şey Yok/Hayır; reklam ${meta.hasAds ? 'var' : 'yok'})`);
 const ageR = await asc('GET', `/v1/appInfos/${info.id}/ageRatingDeclaration`);
 const age = ageR.json?.data;
 if (age) {
@@ -106,7 +106,7 @@ if (age) {
   for (const k of Object.keys(age.attributes)) {
     if (ENUM_NONE.has(k)) attrs[k] = 'NONE';
     else if (FALSE.has(k)) attrs[k] = false;
-    else if (k === 'advertising') attrs[k] = true;
+    else if (k === 'advertising') attrs[k] = !!meta.hasAds;
     else console.log(`  · ${k} = ${JSON.stringify(age.attributes[k])} (dokunulmadı)`);
   }
   for (let tries = 0; tries < 6; tries++) {
@@ -338,6 +338,23 @@ for (const [locale, dir] of Object.entries(SHOT_LOCALE)) {
     );
   }
 }
+
+step('Build: TestFlight'taki en yeni geçerli 1.0 derlemesini sürüme bağla');
+const builds =
+  (
+    await asc(
+      'GET',
+      `/v1/builds?filter[app]=${app.id}&filter[preReleaseVersion.version]=${meta.version}&filter[processingState]=VALID&sort=-uploadedDate&limit=1&fields[builds]=version,uploadedDate`,
+    )
+  ).json?.data ?? [];
+if (!builds[0]) console.log('  · henüz işlenmiş derleme yok (TestFlight işlemesi bitince tekrar çalıştır)');
+else
+  must(
+    await asc('PATCH', `/v1/appStoreVersions/${version.id}/relationships/build`, {
+      data: { type: 'builds', id: builds[0].id },
+    }),
+    `derleme ${builds[0].attributes.version}`,
+  );
 
 console.log(failures ? `\n${failures} adım başarısız (yukarıda ✗).` : '\nTümü tamam.');
 if (failures) process.exitCode = 1;
