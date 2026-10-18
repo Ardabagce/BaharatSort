@@ -1,0 +1,42 @@
+# App Store Connect: mağaza sayfası, ekran görüntüleri, yaş derecesi, fiyat ve gizlilik (store/ klasörü).
+# Sırlar ios.yml ile aynı. Kayıtlar herkese açık olduğundan betikler yalnızca kimlik ve durum yazdırır.
+name: App Store
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'probe (yalnızca oku) | sync (mağaza bilgilerini yaz)'
+        required: true
+        default: probe
+concurrency:
+  group: store
+  cancel-in-progress: false
+jobs:
+  store:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: APPSTORE_API_KEY_P8
+    env:
+      P8: ${{ secrets.APPSTORE_API_KEY_P8 }}
+      KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: API anahtarı
+        run: |
+          trim() { printf '%s' "$1" | tr -d '[:space:]'; }
+          [ -z "$P8" ] && { echo "::error::APPSTORE_API_KEY_P8 yok"; exit 1; }
+          body=$(printf '%s' "$P8" | sed 's/\\n/ /g' | sed 's/-----[A-Z ]*-----//g' | tr -d '[:space:]')
+          mkdir -p "$RUNNER_TEMP/keys"
+          { echo "-----BEGIN PRIVATE KEY-----"; printf '%s' "$body" | fold -w 64; echo; echo "-----END PRIVATE KEY-----"; } > "$RUNNER_TEMP/keys/key.p8"
+          openssl pkey -in "$RUNNER_TEMP/keys/key.p8" -noout 2>/dev/null || { echo "::error::.p8 geçersiz"; exit 1; }
+          {
+            echo "ASC_KEY_ID=$(trim "$KEY_ID")"
+            echo "ASC_ISSUER_ID=$(trim "$ISSUER_ID")"
+            echo "ASC_KEY_PATH=$RUNNER_TEMP/keys/key.p8"
+          } >> "$GITHUB_ENV"
+      - name: ${{ inputs.task }}
+        run: node store/${{ inputs.task == 'sync' && 'sync' || 'probe' }}.mjs
