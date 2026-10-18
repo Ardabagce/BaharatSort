@@ -1,0 +1,30 @@
+{
+  "bundleId": "dev.bagce.baharatsort",
+  "version": "1.0",
+  "copyright": "2026 Arda Bağce",
+  "contentRights": "USES_THIRD_PARTY_CONTENT",
+  "category": { "primary": "GAMES", "sub1": "GAMES_PUZZLE", "sub2": "GAMES_CASUAL" },
+  "urls": {
+    "privacy": "https://github.com/Ardabagce/BaharatSort/blob/HEAD/store/privacy.md",
+    "support": "https://github.com/Ardabagce/BaharatSort/blob/HEAD/store/support.md"
+  },
+  "locales": {
+    "tr": {
+      "name": "Baharat Sort",
+      "subtitle": "Çarşıda baharat bulmacası",
+      "promotionalText": "Kavanozdan kavanoza baharat dök, renkleri ayır, dükkânını süsle. 1000 seviye, internetsiz oynanır.",
+      "keywords": "sıralama,renk,kavanoz,bulmaca,zeka,dökme,kum,su,mısır çarşısı,istanbul,dükkan,rahatlatıcı",
+      "description": "Mısır Çarşısı'nda bir baharat tezgâhının arkasındasın. Pul biber, zerdeçal, sumak, kekik, safran… Hepsi kavanozlara karışmış. Senin işin onları ayırmak.\n\nNASIL OYNANIR\n• Bir kavanoza, sonra hedef kavanoza dokun: üstteki baharat dökülür.\n• Yalnızca aynı baharatın üstüne ya da boş kavanoza dökebilirsin.\n• Tek bir baharatla dolan kavanozun mantar kapağı kapanır.\n• Her kavanoz ya tek baharatla dolu ya da boş olunca seviye biter.\n\nNELER VAR\n• 1000 el emeği seviye: hepsi çözülebilir, hepsi bir bilgisayar çözücüsüyle sınandı.\n• İstanbul'un 34 çarşı sokağı boyunca ilerleyen bir harita: Eminönü'nden Büyükada'ya.\n• Gizli katmanlar, keten bezle mühürlü kavanozlar, uzun ve dar ağızlı kavanozlar.\n• Her 5 seviyede bir zor, her 20 seviyede bir çok zor bölüm.\n• Kazandığın altınla dükkânını süsle: tabela, terazi, lambalar, kilim, kedi yatağı… Beş dükkân, her parçada üç stil.\n• Takıldığında geri al, ipucu, boş kavanoz ve karıştır yardımcıları.\n• Süre yok, can yok, enerji yok. Dilediğin kadar yeniden dene.\n• İnternet gerekmez. Renk körü modu, Türkçe ve İngilizce.\n\nGerçek baharat fotoğrafları, çarşının sesleri ve sakin bir müzik eşliğinde, kafa dağıtmalık bir bulmaca."
+    },
+    "en-US": {
+      "name": "Baharat Sort",
+      "subtitle": "Spice sorting puzzle",
+      "promotionalText": "Pour spices from jar to jar, sort every color and decorate your bazaar stall. 1000 levels, plays offline.",
+      "keywords": "color,jar,puzzle,water,sand,pour,brain,logic,relaxing,istanbul,bazaar,spice,match,shop",
+      "description": "You run a spice stall in Istanbul's Spice Bazaar. Chili flakes, turmeric, sumac, thyme, saffron… they are all mixed up in the jars. Your job is to sort them.\n\nHOW TO PLAY\n• Tap a jar, then a target jar: the top spice pours over.\n• You can only pour onto the same spice or into an empty jar.\n• A jar filled with a single spice gets its cork.\n• The level is done when every jar is either full of one spice or empty.\n\nFEATURES\n• 1000 handcrafted levels, every one solvable and checked by a computer solver.\n• A map through 34 real bazaar streets of Istanbul, from Eminönü to the Princes' Islands.\n• Hidden layers, linen-sealed jars, tall jars and narrow-neck jars.\n• A hard level every 5 levels and a very hard one every 20.\n• Spend the gold you earn to decorate your stall: sign, scales, lamps, rug, cat bed… Five shops, three styles for every piece.\n• Undo, hint, extra jar and shuffle when you get stuck.\n• No timers, no lives, no energy. Retry as often as you like.\n• Plays offline. Colorblind mode, English and Turkish.\n\nA calm puzzle with real spice photographs, bazaar sounds and gentle music."
+    }
+  },
+  "review": {
+    "notes": "Baharat Sort is a single-player puzzle game. No account or login is needed and the game plays fully offline.\n\nHow to play: tap a jar, then another jar to pour the top spice. Fill each jar with a single spice. The first levels are a short tutorial.\n\nThe main screen is the player's shop (decorations are bought with gold earned by playing). 'Play' starts the next level; 'Levels' opens the map. Levels unlock in order.\n\nNo in-app purchases. Gold is earned only by playing and cannot be bought."
+  }
+}
