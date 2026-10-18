@@ -30,14 +30,19 @@ const SYMBOLS: Record<SpiceSymbol, string> = {
 };
 
 /** Her baharat için doku deseni (toz, pul, yaprak, tane). Belgeye bir kez eklenir. */
+/** Keten bez dokusu (kilitli kavanozun örtüsü): ince atkı/çözgü çizgileri. */
+const LINEN = `<pattern id="linen" patternUnits="userSpaceOnUse" width="3" height="3"><rect width="3" height="3" fill="#e6d6b4"/><path d="M0 .5h3M.5 0v3" stroke="#cdb88f" stroke-width=".5"/><path d="M0 2h3" stroke="#f3e8cf" stroke-width=".4"/></pattern>`;
+
 export function patternDefs(): string {
-  return SPICES.map((s) => {
-    const photo = SPICE_PHOTOS[s.key];
-    // Gerçek fotoğraf dokusu varsa o; yoksa kodla çizilmiş doku.
-    if (photo)
-      return `<pattern id="tex${s.id}" patternUnits="userSpaceOnUse" width="40" height="40"><image href="${photo}" width="40" height="40" preserveAspectRatio="xMidYMid slice"/></pattern>`;
-    return `<pattern id="tex${s.id}" patternUnits="userSpaceOnUse" width="16" height="16"><rect width="16" height="16" fill="${s.color}"/>${texture(s)}</pattern>`;
-  }).join('');
+  return (
+    SPICES.map((s) => {
+      const photo = SPICE_PHOTOS[s.key];
+      // Gerçek fotoğraf dokusu varsa o; yoksa kodla çizilmiş doku.
+      if (photo)
+        return `<pattern id="tex${s.id}" patternUnits="userSpaceOnUse" width="40" height="40"><image href="${photo}" width="40" height="40" preserveAspectRatio="xMidYMid slice"/></pattern>`;
+      return `<pattern id="tex${s.id}" patternUnits="userSpaceOnUse" width="16" height="16"><rect width="16" height="16" fill="${s.color}"/>${texture(s)}</pattern>`;
+    }).join('') + LINEN
+  );
 }
 
 function texture(s: Spice): string {
@@ -79,6 +84,22 @@ export interface JarDrawOpts {
   flowDelay?: number;
   /** Kapak bu dökümde kapandı (düşme animasyonu). */
   corkDrop?: boolean;
+  /** Kilit bu dökümde açıldı: bu renkteki mühürlü bez havalanıp gider. */
+  unseal?: number;
+}
+
+/**
+ * Kilitli kavanoz: ağzı keten bezle örtülü, kınnap iple bağlı; ipe, açacak baharatın renginde
+ * bir mühür asılı. O renk kapanınca bez havalanıp gider (`off`).
+ */
+function sealCover(neckL: number, neckR: number, color: number, colorblind: boolean, off: boolean) {
+  const l = neckL - 6;
+  const r = neckR + 6;
+  const s = SPICES[color]!;
+  const cloth = `<path d="M${l} 4 Q${l - 1} -7 32 -9 Q${r + 1} -7 ${r} 4 L${r + 2} 19 Q${r - 3} 23 ${r - 6} 19 Q${r - 10} 24 ${(r + 32) / 2} 20 Q32 25 ${(l + 32) / 2} 20 Q${l + 10} 24 ${l + 6} 19 Q${l + 3} 23 ${l - 2} 19 Z" fill="url(#linen)" stroke="#9c8562" stroke-width="1"/><path d="M${l + 4} -2 Q32 -6 ${r - 4} -2" stroke="#fff6e2" stroke-width="1.6" fill="none" opacity="0.7"/><path d="M${l + 6} 6 L${l + 5} 17 M${(l + 32) / 2} 4 L${(l + 32) / 2 - 1} 19 M${(r + 32) / 2} 4 L${(r + 32) / 2 + 1} 19 M${r - 6} 6 L${r - 5} 17" stroke="#b9a37c" stroke-width="0.8" opacity="0.8"/>`;
+  const twine = `<path d="M${l - 1} 13 Q32 17 ${r + 1} 13" stroke="#7a5428" stroke-width="2.4" fill="none"/><path d="M${l - 1} 13 Q32 17 ${r + 1} 13" stroke="#c49a5c" stroke-width="0.9" stroke-dasharray="2 2" fill="none"/><path d="M32 15.5 q-6 -5 -7 1 q5 1 7 -1 q6 -5 7 1 q-5 1 -7 -1" fill="#9b6c35" stroke="#5e3f1a" stroke-width="0.8"/><path d="M31 16 l-2 9 M33 16 l2 9" stroke="#7a5428" stroke-width="1.6" stroke-linecap="round"/>`;
+  const seal = `<g transform="translate(32 31)"><path d="M0 -10.5 l3 1.6 3.6 -.4 1.7 3.1 3 1.9 -.4 3.5 1.6 3.1 -2.2 2.7 -.3 3.6 -3.3 1.2 -2 2.9 -3.5 -.6 -3.2 1.6 -2.7 -2.3 -3.5 -.4 -1.1 -3.4 -2.9 -2 .6 -3.5 -1.5 -3.2 2.3 -2.6 .4 -3.6 3.4 -1z" fill="#8e1f17" stroke="#4d0d08" stroke-width="1"/><circle r="6.6" fill="url(#tex${color})" stroke="#4d0d08" stroke-width="1.2"/><circle r="6.6" fill="none" stroke="${s.light}" stroke-width="0.8" opacity="0.6"/>${colorblind ? `<path d="${SYMBOLS[s.symbol]}" transform="scale(0.68)" fill="#fff8ec" stroke="#2a170d" stroke-width="0.8"/>` : ''}</g>`;
+  return `<g class="${off ? 'seal-off' : 'seal'}">${cloth}${twine}${seal}</g>`;
 }
 
 export function jarSVG(jar: Jar, cap: number, o: JarDrawOpts): string {
@@ -138,9 +159,10 @@ export function jarSVG(jar: Jar, cap: number, o: JarDrawOpts): string {
   const cork = jar.capped
     ? `<g${o.corkDrop ? ' class="cork-drop"' : ''}><rect x="${neckL - 3}" y="2" width="${neckR - neckL + 6}" height="12" rx="3" fill="#b98953"/><rect x="${neckL - 3}" y="2" width="${neckR - neckL + 6}" height="4" rx="2" fill="#d6a874"/><g fill="#8a6038"><circle cx="${neckL + 4}" cy="9" r="1"/><circle cx="32" cy="11" r="1"/><circle cx="${neckR - 5}" cy="8" r="1"/></g></g>`
     : '';
+  const sealColor = jar.lock ?? o.unseal;
   const lock =
-    jar.lock !== null
-      ? `<g transform="translate(32 ${TOP + (cap * LAYER_H) / 2})"><rect x="-26" y="${-(cap * LAYER_H) / 2}" width="52" height="${cap * LAYER_H}" fill="#1b0f08" opacity="0.45"/><path d="M-8-6v-6a8 8 0 0 1 16 0v6" stroke="#d6a24a" stroke-width="3.5" fill="none"/><rect x="-12" y="-7" width="24" height="20" rx="4" fill="#d6a24a" stroke="#8d6220" stroke-width="1.5"/><circle cx="0" cy="3" r="6.5" fill="url(#tex${jar.lock})" stroke="#2a170d" stroke-width="1"/>${o.colorblind ? `<path d="${SYMBOLS[SPICES[jar.lock]!.symbol]}" transform="translate(0 3) scale(0.7)" fill="#fff8ec" stroke="#2a170d" stroke-width="0.8"/>` : ''}</g>`
+    sealColor !== null && sealColor !== undefined
+      ? `${jar.lock !== null ? `<path d="M5.2 ${TOP - 4} H58.8 V${yB - 2} Q58.8 ${yB + 5.2} 50 ${yB + 5.2} H14 Q5.2 ${yB + 5.2} 5.2 ${yB - 2}Z" fill="#1b0f08" opacity="0.38"/>` : ''}${sealCover(neckL, neckR, sealColor, o.colorblind, jar.lock === null)}`
       : '';
   return `<svg viewBox="0 ${-CORK_ROOM} ${JAR_W} ${H + CORK_ROOM}" aria-hidden="true">
 <ellipse cx="32" cy="${yB + 6}" rx="27" ry="3.5" fill="#000" opacity="0.35"/>

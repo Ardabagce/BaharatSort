@@ -64,6 +64,9 @@ function pathD(pts: { x: number; y: number }[]): string {
 const CHILI =
   '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M14 3c1 0 2 1 1.5 2.2C17 6 17 8 15 10c-3 4-7 6.5-11 7-1 0-1-1 0-1.5 4-2 7-5 8.5-9 .4-1.2 1-2 1.5-2.2C14 4 13.5 3 14 3z" fill="#d3352b"/><path d="M14.2 2.4c.8-.8 2-.8 2.6 0" stroke="#3d6a2c" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M12 7c-1 3-3 5-6 7" stroke="#f06a4f" stroke-width="1" fill="none" opacity=".7"/></svg>';
 
+/** Kilitli düğüm için küçük pirinç asma kilit. */
+const PADLOCK = `<svg viewBox="0 0 20 22" aria-hidden="true"><path d="M5.5 10V7a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="#c9a15a" stroke-width="2.4"/><rect x="2.5" y="9.5" width="15" height="11" rx="2.5" fill="#d9b25f" stroke="#6b4a17" stroke-width="1.3"/><circle cx="10" cy="14.2" r="1.7" fill="#4a3110"/><path d="M10 15v2.6" stroke="#4a3110" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+
 export function mapHTML(
   levels: readonly LevelDef[],
   width: number,
@@ -99,8 +102,12 @@ ${done.length > 1 ? `<path d="${pathD(done)}" fill="none" stroke="#e6b85a" strok
           : lv.kind === 'hard'
             ? `<span class="chili">${CHILI}</span>`
             : '';
-      const label = lang === 'tr' ? `Seviye ${n}` : `Level ${n}`;
-      return `<button class="${cls.join(' ')}" data-n="${n}" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px" aria-label="${label}"><span class="num">${n}</span>${badge}</button>`;
+      const locked = n > unlocked;
+      const label =
+        (lang === 'tr' ? `Seviye ${n}` : `Level ${n}`) +
+        (locked ? (lang === 'tr' ? ' (kilitli)' : ' (locked)') : '');
+      const lock = locked ? `<span class="padlock">${PADLOCK}</span>` : '';
+      return `<button class="${cls.join(' ')}" data-n="${n}" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px" aria-label="${label}"${locked ? ' aria-disabled="true"' : ''}><span class="num">${n}</span>${badge}${lock}</button>`;
     })
     .join('');
   return `<div class="map-inner" style="height:${L.height}px">${svg}${signs}${nodes}</div>`;

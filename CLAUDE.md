@@ -28,7 +28,7 @@ sıralama bulmacası ve kendi sunucumuzda çalışan backend'i. Altyapı VapurJa
 8. Günün bulmacası, cilalama, hata durumları
 9. Mağaza hazırlığı
 
-Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HTML üretir (`prototype/dist/baharat-sort.html`, aynı `shared` motoru, aynı 300 seviye). Yayımlanmış hali: https://claude.ai/artifact/BchsrPEw85FfRRVW3fhP9f (aynı dosya yolundan yeniden yayımlanır). Prototipte tüm seviyeler açık, reklamlar simülasyon; dükkân/harita henüz yok. Çizim ölçüleri (`prototype/src/art.ts`) uygulamadaki Skia çizimine taşınacak.
+Web prototipi (revize için): `prototype/` → `pnpm prototype` tek dosyalık HTML üretir (`prototype/dist/baharat-sort.html`, aynı `shared` motoru, aynı 300 seviye). Yayımlanmış hali: https://claude.ai/artifact/BchsrPEw85FfRRVW3fhP9f (aynı dosya yolundan yeniden yayımlanır). Prototipte seviyeler sırayla açılır (geçilmemiş olanlar haritada asma kilitli), reklamlar simülasyon. Çizim ölçüleri (`prototype/src/art.ts`) uygulamadaki Skia çizimine taşınacak.
 
 ## Yapı
 
@@ -60,7 +60,7 @@ pnpm balance      # denge simülasyonu → docs/balance-report.md
 - **Kilitlenme** (`isStuck`): anlamlı hamle yok **ya da** erişilebilen durumlar küçük, kapalı bir küme ve hiçbiri ilerleme (kapak/kazanma) getirmiyor (yalnızca ileri geri dökülebiliyor). O zaman "Son bir şans" ekranı. Anlamlı hamle: simetrik (durumu değiştirmeyen) dökümler hariç (`meaningfulMoves`).
 - Hamle/süre sınırı yok, can/enerji yok; sınırsız yeniden deneme.
 - **Gizli katman (11+)** `hidden: k`: alttan k katman "?" görünür. En üst katman asla gizli değildir; üste çıkan katman açılır ve bir daha gizlenmez. Kurallar ve çözücü gerçek rengi bilir (yalnızca görünüm).
-- **Kilitli kavanoz (21+)** `lock: renk`: o renkteki bir kavanoz kapanınca açılır; kilitliyken ne verir ne alır. Üretici, kilit rengini kilitli kavanozun içine koymaz (yoksa o renk hiç tamamlanamazdı).
+- **Kilitli kavanoz (21+)** `lock: renk`: o renkteki bir kavanoz kapanınca açılır; kilitliyken ne verir ne alır. Görünüm: ağzı keten bezle örtülü, kınnap iple bağlı, ipte açacak baharatın dokusunda kırmızı mum mühür; içi hafif karartılı (camın kavisli dibi dahil). Açılınca bez havalanıp kaybolur. Üretici, kilit rengini kilitli kavanozun içine koymaz (yoksa o renk hiç tamamlanamazdı).
 - **Uzun kavanoz (31+)**: seviyenin kapasitesi 5 (ilk 30 seviye) sonra 5 ya da 6.
 - **Dar ağızlı kavanoz (41+)** `narrow`: bir dökümde en fazla 1 katman **alır ve verir**.
 - 61+: her 20 seviyelik blokta bir öğe birleşimi öne çıkar (`THEMES`: gizli+kilit, uzun+dar, …).
@@ -73,7 +73,7 @@ pnpm balance      # denge simülasyonu → docs/balance-report.md
 - **Çözücü:** A\* + kanonik durum anahtarı (kavanoz sırası önemsiz; tür ve içerik önemli) + simetri budaması (aynı türden ikinci boş kavanoz, tek renkli kavanozu boşa aktarma). Sezgisel kabul edilebilir ve tutarlı: farklı renk üstündeki her dizi en az bir kez taşınır + birden çok kavanozun dibindeki bir renk için fazlalık. Bu yüzden bulunan çözüm **en kısadır** (testte kaba kuvvet BFS ile doğrulanır). Bütçe aşılırsa ağırlıklı A\* ile en azından çözülebilirlik doğrulanır (`exact: false`). Pratikte 300 seviyenin hepsi kesin çözüldü, toplam üretim ~80 sn.
 - **Ölçümler:** en kısa çözüm, çözüm yolu boyunca ortalama anlamlı hamle (dallanma), **çıkmaz oranı** (40 oyunluk "rastgele" bot: anlamlı hamlelerden rastgele, %60 aynı renge dökmeyi tercih eder, son dökümü geri almaz; anlamlı hamle kalmazsa kilitlenmiş sayılır), gizli katman, renk/kavanoz oranı.
 - **Zorluk skoru (1–10):** `ham = enKısa × log2(1+dallanma) × (1+2.5·çıkmaz) × (1+1.2·gizliOranı) × (0.6+renk/kavanoz) × (1+öğe ağırlıkları)`, `1 + 9·ham/(ham+140)`.
-- **Eğri (testere dişi, `levelKind`, `targetDifficulty`, eşikler `config.difficulty`):** 1–10 eğitici (hedef 1.2→2, 5 ve 10 rozetli ama yumuşak). Normal hedef 3 → 7 (11→300). Her 5. seviye zor (+1.3), her 20. çok zor (+2.5), zordan hemen sonraki rahatlatıcı (−1). Yeni öğeler 11/21/31/41'de tanıtılır; bu seviyeler zaten rahatlatıcıdır ve en fazla 5 renklidir.
+- **Eğri (testere dişi, `levelKind`, `targetDifficulty`, eşikler `config.difficulty`):** 1–10 eğitici (hedef 1.2→2, 5 ve 10 rozetli ama yumuşak). Normal hedef 3,5 → 8 (11→200, sonra 8'de sabit; Arda, 18 Ekim 2026: "seviye seviye daha zorlaştır"). Renk sayısı 5'ten başlar, her 20 seviyede +1 (en fazla 9). Tek boş kavanoz: çok zorlarda (40+) %70, zorlarda (60+) %35 olasılıkla. Her 5. seviye zor (+1.3), her 20. çok zor (+2.5), zordan hemen sonraki rahatlatıcı (−1). Yeni öğeler 11/21/31/41'de tanıtılır; bu seviyeler zaten rahatlatıcıdır ve en fazla 5 renklidir.
 - Gömülü 300 seviye `shared/src/levels/builtin.json` (~130 KB), repoda durur (çevrimdışı). Üretici değişince `pnpm levels`. Test: her seviyenin çözümü oynatılıp kazandırdığı, her 23. seviyenin yeniden üretilince birebir aynı olduğu, zor > normal > rahatlatıcı ortalamaları.
 - Zorluk eşikleri config'ten gelir ama gömülü seviyeler build anında üretilir; uzaktan değişiklik yalnızca sunucunun ürettiği yeni paketleri ve günün bulmacasını etkiler. Çalışma anında etkili olan eşik: `stuckHintAfter`.
 - **Takılınca:** aynı seviyede 3 kilitlenme → sonraki denemede ipucu düğmesi parlar, bir ipucu ücretsiz. Seviye zorluğu gizlice düşürülmez.
@@ -119,7 +119,7 @@ Sonraki dükkân, öncekinin 9 parçası alınınca açılır.
 - Her parça 3 stil: ilk stil parçayla gelir, diğer ikisi **parça fiyatı × 1,2**. Ek stiller, 5 dükkân bittikten sonra (~140. seviye) altının kalıcı harcama yeri; simülasyonda bu olmadan sık reklam izleyen 3.900 altın biriktiriyordu.
 - **Altın reklamı sınırı:** altın veren ödüllü reklamlar ("2x al", "eksiği tamamla") günde en fazla 14. Güçlendirici ve "son bir şans" reklamları sınırsız (altın vermezler). Sınır olmadan sık izleyen %68 hızlanıyordu (hedef %40–60).
 - Eksik altın 30'dan azsa "eksiği reklamla tamamla".
-- **Simülasyon sonucu (reklamsız):** ~5,8 seviyede bir güçlendirici, 3,1 seviyede bir parça, dükkân başına 23–32 seviye, sık izleyen %46 hızlı, en yüksek bakiye 100.
+- **Simülasyon sonucu (reklamsız, zorlaştırılmış seviyelerle):** 4,1 seviyede bir güçlendirici (hedefte), 3,4 seviyede bir parça, dükkân başına 23 / 26 / 29 / 32 / 43 seviye (5. dükkân uzun), sık izleyen %72 hızlı (hedef %40–60). Zorluk artınca oyuncu güçlendiriciye daha çok altın harcıyor; ekonomi yeniden ayarlanacak (Arda'nın onayı bekleniyor).
 
 ## Reklam kuralları (`shared/src/adPolicy.ts`, testli)
 

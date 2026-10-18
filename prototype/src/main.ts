@@ -159,6 +159,8 @@ function level(n: number): LevelDef {
 }
 
 function startLevel(n: number) {
+  // Kilitli seviyeye hiçbir yoldan girilmez.
+  n = Math.max(1, Math.min(n, progress.unlocked, BUILTIN_LEVELS.length));
   pourGen++;
   pending.length = 0;
   running.clear();
@@ -270,7 +272,9 @@ function renderBoard() {
 
 function drawJar(
   i: number,
-  extra: Partial<Pick<JarDrawOpts, 'grown' | 'drained' | 'flowMs' | 'flowDelay' | 'corkDrop'>> = {},
+  extra: Partial<
+    Pick<JarDrawOpts, 'grown' | 'drained' | 'flowMs' | 'flowDelay' | 'corkDrop' | 'unseal'>
+  > = {},
   state: GameState = session.state,
 ) {
   const el = jarEls[i];
@@ -601,7 +605,8 @@ async function animatePour(job: PourJob) {
   srcEl.style.zIndex = '';
 
   for (const i of job.unlocked) {
-    drawJar(i, {}, job.after);
+    const was = prev.jars[i]!.lock;
+    drawJar(i, was === null ? {} : { unseal: was }, job.after);
     jarEls[i]!.animate([{ filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }], {
       duration: 500,
     });
@@ -1280,8 +1285,18 @@ function openLevels() {
     getLang(),
   );
   scroll.addEventListener('click', (e) => {
-    const n = Number((e.target as HTMLElement).closest<HTMLElement>('[data-n]')?.dataset.n);
-    if (n) startLevel(n);
+    const node = (e.target as HTMLElement).closest<HTMLElement>('[data-n]');
+    const n = Number(node?.dataset.n);
+    if (!n) return;
+    // Yalnızca geçilmiş seviyeler ve sıradaki açık; sonrakiler kilitli.
+    if (n > progress.unlocked) {
+      shake(node!);
+      sfxThud();
+      if (settings.haptics) vibrate(30);
+      toast(t('levelLocked', { n: progress.unlocked }));
+      return;
+    }
+    startLevel(n);
   });
   v.querySelector('#lvClose')!.addEventListener('click', closeVeil);
   const cur = scroll.querySelector<HTMLElement>('.node.cur');

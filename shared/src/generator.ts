@@ -104,7 +104,7 @@ function shapeFor(n: number, kind: LevelKind, rng: Rng, d: DifficultyConfig): Sh
     colors = [3, 3, 4, 4, 4, 4, 5, 5, 5, 5][n - 1] ?? 5;
     if (n <= 4) scramble = [3, 5, 7, 9][n - 1]!;
   } else {
-    colors = Math.min(9, 5 + Math.floor((n - d.tutorialLevels - 1) / 30));
+    colors = Math.min(9, 5 + Math.floor((n - d.tutorialLevels - 1) / 20));
     if (kind === 'hard') colors += 1;
     if (kind === 'veryHard') colors += randomInt(rng, 1, 2);
     if (kind === 'relief') colors -= 1;
@@ -124,8 +124,10 @@ function shapeFor(n: number, kind: LevelKind, rng: Rng, d: DifficultyConfig): Sh
   const locks = features.includes('lock') ? (kind === 'veryHard' && n > 80 ? 2 : 1) : 0;
   const narrow = features.includes('narrow') ? (n > 120 && rng() < 0.4 ? 2 : 1) : 0;
   let empties = 2 + (locks >= 2 ? 1 : 0);
-  // Çok zor seviyelerde bazen tek boş kavanoz (çözücü doğrulamazsa aday zaten atılır).
-  if (kind === 'veryHard' && n >= 40 && locks < 2 && rng() < 0.5) empties = 1;
+  // Çok zor seviyelerde sık, zor seviyelerde 60'tan sonra bazen tek boş kavanoz
+  // (çözücü doğrulamazsa aday zaten atılır).
+  if (kind === 'veryHard' && n >= 40 && locks < 2 && rng() < 0.7) empties = 1;
+  if (kind === 'hard' && n >= 60 && locks < 2 && rng() < 0.35) empties = 1;
   return { colors, empties, cap, features, hiddenJars, locks, narrow, scramble };
 }
 
