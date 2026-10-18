@@ -5,7 +5,10 @@
 export type HostMessage =
   | { type: 'save'; data: string; reset?: boolean }
   | { type: 'haptic'; pattern: number | number[] }
-  | { type: 'ready' };
+  | { type: 'ready' }
+  | { type: 'ad'; id: number; kind: 'rewarded' | 'interstitial' }
+  | { type: 'banner'; visible: boolean }
+  | { type: 'privacyOptions' };
 
 /** Gelen metni doğrular; tanınmayan ya da bozuk mesaj null döner. */
 export function parseHostMessage(raw: string): HostMessage | null {
@@ -29,6 +32,16 @@ export function parseHostMessage(raw: string): HostMessage | null {
     return null;
   }
   if (o.type === 'ready') return { type: 'ready' };
+  if (
+    o.type === 'ad' &&
+    typeof o.id === 'number' &&
+    Number.isInteger(o.id) &&
+    (o.kind === 'rewarded' || o.kind === 'interstitial')
+  )
+    return { type: 'ad', id: o.id, kind: o.kind };
+  if (o.type === 'banner' && typeof o.visible === 'boolean')
+    return { type: 'banner', visible: o.visible };
+  if (o.type === 'privacyOptions') return { type: 'privacyOptions' };
   return null;
 }
 
@@ -45,9 +58,18 @@ export function hapticFor(pattern: number | number[]): Haptic {
   return 'medium';
 }
 
-/** Sayfa yüklenmeden önce çalışır: telefondaki kaydı oyuna verir. */
-export function injectSaved(saved: string | null): string {
-  return `window.__BS_SAVED = ${JSON.stringify(saved)}; true;`;
+/** Sayfa yüklenmeden önce çalışır: telefondaki kaydı ve uygulamanın yeteneklerini oyuna verir. */
+export function injectSaved(saved: string | null, caps: { ads: boolean } = { ads: false }): string {
+  return `window.__BS_SAVED = ${JSON.stringify(saved)}; window.__BS_HOST = ${JSON.stringify(caps)}; true;`;
+}
+
+/** Uygulama → oyun olayı (prototype/src/host.ts › HostEvent). */
+export type HostEvent =
+  | { type: 'adResult'; id: number; shown: boolean; rewarded: boolean }
+  | { type: 'hostState'; ads?: boolean; privacyOptions?: boolean };
+
+export function hostEventJs(e: HostEvent): string {
+  return `window.__BS_onHost && window.__BS_onHost(${JSON.stringify(e)}); true;`;
 }
 
 /** Kayıttan ilerlemenin geri alınamaz kısmı: açılan seviye ve alınan dükkân parçası sayısı. */

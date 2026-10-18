@@ -173,6 +173,14 @@ export function syncAmbience() {
   }
 }
 
+/** Tam ekran reklam sırasında oyunun sesi susar. */
+export function pauseAudio() {
+  ctx?.suspend().catch(() => {});
+}
+export function resumeAudio() {
+  ctx?.resume().catch(() => {});
+}
+
 export function vibrate(pattern: number | number[]) {
   // iPhone'da navigator.vibrate yok: uygulamada titreşimi telefon yapar (expo-haptics).
   if (inApp) return postHost({ type: 'haptic', pattern });

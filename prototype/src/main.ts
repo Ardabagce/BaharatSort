@@ -61,13 +61,13 @@ import {
   patternDefs,
   TOP,
 } from './art';
-import { hostSaved, inApp, postHost } from './host';
+import { hostAd, hostCaps, hostSaved, inApp, postHost } from './host';
 
 /**
- * Reklamlar: prototipte simülasyon. Uygulamada gerçek reklamlar (7. aşama) gelene kadar hiç reklam yok:
- * reklam düğmeleri, banner yeri ve geçiş reklamı görünmez (Apple yer tutucu reklamı kabul etmez).
+ * Reklamlar: prototipte simülasyon, uygulamada gerçek AdMob (uygulama tarafı, köprü üzerinden).
+ * Uygulamada reklam modülü yoksa (Expo Go) reklam düğmeleri, banner ve geçiş reklamı hiç görünmez.
  */
-const ADS = !inApp;
+const ADS = !inApp || hostCaps.ads;
 import {
   audio,
   sfxCoins,
@@ -77,6 +77,8 @@ import {
   sfxThud,
   sfxTink,
   sfxWin,
+  pauseAudio,
+  resumeAudio,
   syncAmbience,
   unlock,
   vibrate,
@@ -175,6 +177,7 @@ function startLevel(n: number) {
   pending.length = 0;
   running.clear();
   busy = false;
+  if (document.getElementById('home') && inApp) postHost({ type: 'banner', visible: false });
   document.getElementById('home')?.remove();
   app.scrollLeft = 0;
   app.scrollTop = 0;
@@ -1138,7 +1141,17 @@ function showIntro(f: Feature) {
 
 type RewardedResult = 'rewarded' | 'dismissed' | 'unavailable';
 
-function rewardedAd(): Promise<RewardedResult> {
+async function rewardedAd(): Promise<RewardedResult> {
+  if (inApp) {
+    pauseAudio();
+    const r = await hostAd('rewarded');
+    resumeAudio();
+    if (!r.shown) return 'unavailable';
+    if (!r.rewarded) return 'dismissed';
+    ads = onRewardedWatched(ads, Date.now());
+    persist();
+    return 'rewarded';
+  }
   if (settings.adFail) return Promise.resolve('unavailable');
   return new Promise((resolve) => {
     const v = veil(`<div class="card adsim"><span class="kind">${t('adRewarded')}</span>
@@ -1170,7 +1183,13 @@ function rewardedAd(): Promise<RewardedResult> {
   });
 }
 
-function interstitialAd(): Promise<boolean> {
+async function interstitialAd(): Promise<boolean> {
+  if (inApp) {
+    pauseAudio();
+    const r = await hostAd('interstitial');
+    resumeAudio();
+    return r.shown;
+  }
   if (settings.adFail) return Promise.resolve(false);
   return new Promise((resolve) => {
     const v = veil(`<div class="card adsim"><span class="kind">${t('adInter')}</span>
@@ -1229,6 +1248,7 @@ function openSettings() {
     <div class="dev">${t('devCounters', { s: ads.session, l: ads.levelsSinceLast, h: hour, d: lastDecision })}</div>`
     }
     <div class="stack">
+      ${inApp && hostCaps.privacyOptions ? `<button class="btn plain" id="dPrivacy">${t('privacyOptions')}</button>` : ''}
       ${inApp ? '' : `<button class="btn plain" id="dSession">${t('newSession')}</button>`}
       ${inApp ? '' : `<button class="btn plain" id="dAds">${t('resetAds')}</button>`}
       <button class="btn plain" id="dReset">${t('resetAll')}</button>
@@ -1268,6 +1288,9 @@ function openSettings() {
     persist();
     openSettings();
   });
+  v.querySelector('#dPrivacy')?.addEventListener('click', () =>
+    postHost({ type: 'privacyOptions' }),
+  );
   v.querySelector('#dReset')!.addEventListener('click', (e) => {
     if (!resetArmed) {
       resetArmed = true;
@@ -1343,6 +1366,8 @@ function ownedMap(shop: string): Partial<Record<ItemId, number>> {
 
 function openHome() {
   closeVeil();
+  // Banner yalnızca ana ekranda (dükkân), uygulamanın kendisi altta gösterir.
+  if (inApp && ADS) postHost({ type: 'banner', visible: true });
   document.getElementById('home')?.remove();
   const shops = cfg.economy.shops;
   if (!isShopUnlocked(progress, cfg, viewShop)) viewShop = progress.activeShop;
@@ -1378,7 +1403,7 @@ function openHome() {
       <button class="btn primary play" id="hPlay"><span>${t('play')}</span><small>${t('level', { n: Math.min(BUILTIN_LEVELS.length, progress.unlocked) })}</small></button>
       <button class="btn plain" id="hMap">${t('levels')}</button>
     </div>
-    ${ADS ? `<div class="banner-mock">${t('bannerMock')}</div>` : ''}`;
+    ${ADS && !inApp ? `<div class="banner-mock">${t('bannerMock')}</div>` : ''}`;
   app.appendChild(h);
   h.querySelector('#hPlay')!.addEventListener('click', () => {
     unlock();

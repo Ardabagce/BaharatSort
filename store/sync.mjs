@@ -159,6 +159,7 @@ for (const [locale, L] of Object.entries(meta.locales)) {
     keywords: L.keywords,
     promotionalText: L.promotionalText,
     supportUrl: meta.urls.support,
+    ...(meta.urls.marketing ? { marketingUrl: meta.urls.marketing } : {}),
   };
   const have = vLocs.find((x) => x.attributes.locale === locale);
   const r = have

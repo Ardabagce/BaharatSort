@@ -1,13 +1,18 @@
 {
   "bundleId": "dev.bagce.baharatsort",
   "version": "1.0",
-  "hasAds": false,
+  "hasAds": true,
   "copyright": "2026 Arda Bağce",
   "contentRights": "USES_THIRD_PARTY_CONTENT",
-  "category": { "primary": "GAMES", "sub1": "GAMES_PUZZLE", "sub2": "GAMES_CASUAL" },
+  "category": {
+    "primary": "GAMES",
+    "sub1": "GAMES_PUZZLE",
+    "sub2": "GAMES_CASUAL"
+  },
   "urls": {
     "privacy": "https://baharat.bagce.dev/privacy",
-    "support": "https://baharat.bagce.dev/support"
+    "support": "https://baharat.bagce.dev/support",
+    "marketing": "https://bagce.dev"
   },
   "locales": {
     "tr": {
@@ -26,6 +31,6 @@
     }
   },
   "review": {
-    "notes": "Baharat Sort is a single-player puzzle game. No account or login is needed and the game plays fully offline.\n\nHow to play: tap a jar, then another jar to pour the top spice. Fill each jar with a single spice. The first levels are a short tutorial.\n\nThe main screen is the player's shop (decorations are bought with gold earned by playing). 'Play' starts the next level; 'Levels' opens the map. Levels unlock in order.\n\nNo in-app purchases. Gold is earned only by playing and cannot be bought."
+    "notes": "Baharat Sort is a single-player puzzle game. No account or login is needed and the game plays fully offline.\n\nHow to play: tap a jar, then another jar to pour the top spice. Fill each jar with a single spice. The first levels are a short tutorial.\n\nThe main screen is the player's shop (decorations are bought with gold earned by playing). 'Play' starts the next level; 'Levels' opens the map. Levels unlock in order.\n\nAds (Google AdMob, content rating G):\n- App Tracking Transparency: the ATT prompt is shown about one second after the app first becomes active, before the Google Mobile Ads SDK is initialized and before any ad is requested. If tracking is declined, ads are not personalised. In the EU/UK the Google UMP consent form follows the ATT prompt; Settings has a 'Privacy options' button there.\n- A banner only on the main (shop) screen, never during a level.\n- An interstitial only after a level is won, never in the first 8 levels or the first session, at most every 3 levels.\n- Rewarded ads are always optional (double the gold after a win, a free booster, a last chance when stuck, or a top-up when a few gold are missing).\n\nNo in-app purchases. Gold is earned only by playing and cannot be bought.\nPrivacy policy: https://baharat.bagce.dev/privacy"
   }
 }

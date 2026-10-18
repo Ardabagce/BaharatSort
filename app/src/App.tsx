@@ -2,12 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import { nativeAds } from './ads';
+import type { AdController } from './ads/native';
 import {
   hapticFor,
+  hostEventJs,
   injectSaved,
   parseHostMessage,
   shouldAcceptSave,
@@ -18,7 +21,7 @@ import { GAME_HTML } from './game/game.gen';
 /**
  * Baharat Sort: oyunun tamamı (kurallar, 1000 seviye, dükkân, sesler, görseller) prototiple aynı
  * kodla, çevrimdışı bir WebView'da çalışır. Uygulama kaydı telefonda tutar ve titreşimi iPhone'un
- * dokunsal motoruna bağlar. Reklamlar, ATT ve UMP 7. aşamada buradan bağlanacak.
+ * dokunsal motoruna bağlar. Reklamlar (AdMob, ATT, UMP) uygulama tarafında; oyun köprüden ister.
  */
 
 const SAVE_KEY = 'baharatsort.save.v1';
@@ -43,6 +46,23 @@ function Game() {
   // Telefondaki son kayıt. Okunamadıysa (readFailed) bu oturumda hiçbir şey yazılmaz: eski kayıt korunur.
   const lastSaved = useRef<string | null>(null);
   const readFailed = useRef(false);
+  const web = useRef<ComponentRef<typeof WebView>>(null);
+  const ads = useRef<AdController | null>(null);
+  const [bannerWanted, setBannerWanted] = useState(false);
+  const [canRequestAds, setCanRequestAds] = useState(false);
+
+  // Reklamlar: ATT → SDK → UMP, sonra oyuna durum bildirilir. Expo Go'da reklam yok.
+  useEffect(() => {
+    if (!nativeAds) return;
+    const c = new nativeAds.AdController((st) => {
+      setCanRequestAds(st.canRequestAds);
+      web.current?.injectJavaScript(
+        hostEventJs({ type: 'hostState', ads: true, privacyOptions: st.privacyOptions }),
+      );
+    });
+    ads.current = c;
+    void c.start();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +103,21 @@ function Game() {
       lastSaved.current = msg.data;
       AsyncStorage.setItem(SAVE_KEY, msg.data).catch(() => {});
     } else if (msg.type === 'haptic') HAPTICS[hapticFor(msg.pattern)]().catch(() => {});
+    else if (msg.type === 'banner') setBannerWanted(msg.visible);
+    else if (msg.type === 'privacyOptions') void ads.current?.showPrivacyOptions();
+    else if (msg.type === 'ad') {
+      const c = ads.current;
+      const run = c
+        ? msg.kind === 'rewarded'
+          ? c.showRewarded()
+          : c.showInterstitial()
+        : Promise.resolve({ shown: false, rewarded: false });
+      void run
+        .catch(() => ({ shown: false, rewarded: false }))
+        .then((r) =>
+          web.current?.injectJavaScript(hostEventJs({ type: 'adResult', id: msg.id, ...r })),
+        );
+    }
   }, []);
 
   if (saved === undefined) return <View style={styles.root} />;
@@ -90,10 +125,11 @@ function Game() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <StatusBar style="light" />
       <WebView
+        ref={web}
         style={styles.web}
         source={{ html: GAME_HTML, baseUrl: BASE_URL }}
         originWhitelist={['*']}
-        injectedJavaScriptBeforeContentLoaded={injectSaved(saved)}
+        injectedJavaScriptBeforeContentLoaded={injectSaved(saved, { ads: !!nativeAds })}
         onMessage={onMessage}
         onLoadEnd={hideSplash}
         onError={hideSplash}
@@ -116,6 +152,11 @@ function Game() {
         // Oyun dışına gitmeye çalışan bağlantıları engelle (yalnızca kendi sayfası).
         onShouldStartLoadWithRequest={(r) => r.url.startsWith(BASE_URL) || r.url === 'about:blank'}
       />
+      {nativeAds && bannerWanted && canRequestAds ? (
+        <View style={{ paddingBottom: insets.bottom }}>
+          <nativeAds.NativeBanner />
+        </View>
+      ) : null}
     </View>
   );
 }
