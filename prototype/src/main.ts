@@ -49,7 +49,7 @@ import {
 } from '../../shared/src/session';
 import { checkPour } from '../../shared/src/rules';
 import { SPICES } from '../../shared/src/spices';
-import type { Feature, LevelDef } from '../../shared/src/types';
+import type { Feature, GameState, LevelDef } from '../../shared/src/types';
 import { CORK_ROOM, JAR_W, jarHeight, jarSVG, LAYER_H, MOUTH_Y, patternDefs, TOP } from './art';
 import {
   audio,
@@ -149,6 +149,10 @@ function level(n: number): LevelDef {
 }
 
 function startLevel(n: number) {
+  pourGen++;
+  pending.length = 0;
+  running.clear();
+  busy = false;
   document.getElementById('home')?.remove();
   app.scrollLeft = 0;
   app.scrollTop = 0;
@@ -255,11 +259,15 @@ function renderBoard() {
   else caption('');
 }
 
-function drawJar(i: number, extra: { grown?: number; corkDrop?: boolean } = {}) {
+function drawJar(
+  i: number,
+  extra: { grown?: number; corkDrop?: boolean } = {},
+  state: GameState = session.state,
+) {
   const el = jarEls[i];
-  const jar = session.state.jars[i];
+  const jar = state.jars[i];
   if (!el || !jar) return;
-  el.innerHTML = jarSVG(jar, session.state.cap, {
+  el.innerHTML = jarSVG(jar, state.cap, {
     uid: `${levelN}-${i}-${Math.random().toString(36).slice(2, 7)}`,
     colorblind: settings.colorblind,
     ...extra,
@@ -272,7 +280,7 @@ function drawJar(i: number, extra: { grown?: number; corkDrop?: boolean } = {}) 
         .join(', ')
     : '–';
   el.setAttribute('aria-label', `${i + 1}: ${name}${jar.capped ? ' ✓' : ''}`);
-  el.classList.toggle('lifted', selected === i);
+  el.classList.toggle('lifted', selected === i && !running.has(i));
 }
 
 function caption(text: string) {
@@ -310,7 +318,7 @@ function clearHint() {
 
 function onJarTap(e: Event) {
   unlock();
-  if (busy || ended) return;
+  if (ended) return;
   const i = Number((e.currentTarget as HTMLElement).dataset.i);
   const jar = session.state.jars[i]!;
   if (selected === null) {
@@ -321,60 +329,144 @@ function onJarTap(e: Event) {
       return;
     }
     selected = i;
-    jarEls[i]!.classList.add('lifted');
+    markSelected();
     sfxTink(1 + (jar.layers.length % 4) * 0.06);
     if (settings.haptics) vibrate(8);
     return;
   }
   if (selected === i) {
-    jarEls[i]!.classList.remove('lifted');
     selected = null;
+    markSelected();
     return;
   }
   const from = selected;
   const check = checkPour(session.state, from, i);
+  selected = null;
+  markSelected();
   if (!check.ok) {
-    shake(jarEls[i]!);
-    jarEls[from]!.classList.remove('lifted');
-    selected = null;
+    if (!running.has(i)) shake(jarEls[i]!);
     sfxThud();
     if (settings.haptics) vibrate([20, 30, 20]);
     return;
   }
-  void doPour(from, i);
+  queuePour(from, i);
+}
+
+/** Seçili kavanoz: animasyonda değilse kalkar, animasyondaysa yalnızca camı parlar. */
+function markSelected() {
+  jarEls.forEach((el, k) => {
+    el.classList.toggle('lifted', selected === k && !running.has(k));
+    el.classList.toggle('picked', selected === k && running.has(k));
+  });
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-async function doPour(from: number, to: number) {
-  busy = true;
-  selected = null;
-  clearHint();
-  const srcEl = jarEls[from]!;
-  const dstEl = jarEls[to]!;
-  const prevState = session.state;
+/**
+ * Döküm mantığı dokunulduğu anda uygulanır (oyuncu beklemeden sıradaki dökümü seçebilir);
+ * animasyonlar sıraya girer. Farklı kavanozları ilgilendiren dökümler aynı anda oynar, aynı kavanozu
+ * ilgilendirenler sırayla. Sıra birikirse animasyonlar hızlanır.
+ */
+interface PourJob {
+  from: number;
+  to: number;
+  prev: GameState;
+  after: GameState;
+  amount: number;
+  color: number;
+  capped: boolean;
+  unlocked: number[];
+}
+const running = new Set<number>();
+const pending: PourJob[] = [];
+let pourGen = 0;
+
+function queuePour(from: number, to: number) {
+  const prev = session.state;
   const { session: next, result } = sessionPour(session, from, to);
-  if (!result.ok) {
-    busy = false;
-    return;
-  }
+  if (!result.ok) return;
   session = next;
-  const spice = SPICES[result.color]!;
+  clearHint();
   if (tutorialStep === 1) tutorialStep = 2;
   else if (tutorialStep === 2) tutorialStep = 0;
+  if (sessionWon(session)) ended = true;
+  pending.push({
+    from,
+    to,
+    prev,
+    after: result.state,
+    amount: result.amount,
+    color: result.color,
+    capped: result.capped,
+    unlocked: result.unlocked,
+  });
+  busy = true;
+  pumpPours();
+}
 
-  // Kepçe yolu: kaynak kavanoz hedefin üstüne gelip eğilir.
+function pumpPours() {
+  const blocked = new Set(running);
+  for (let k = 0; k < pending.length; k++) {
+    const job = pending[k]!;
+    if (blocked.has(job.from) || blocked.has(job.to)) {
+      blocked.add(job.from);
+      blocked.add(job.to);
+      continue;
+    }
+    pending.splice(k, 1);
+    k--;
+    running.add(job.from);
+    running.add(job.to);
+    blocked.add(job.from);
+    blocked.add(job.to);
+    const gen = pourGen;
+    void animatePour(job)
+      .catch((err) => console.error('pour animation', err))
+      .then(() => {
+        if (gen !== pourGen) return;
+        running.delete(job.from);
+        running.delete(job.to);
+        markSelected();
+        pumpPours();
+        if (running.size === 0 && pending.length === 0)
+          onPoursIdle().catch((err) => console.error('idle', err));
+      });
+  }
+}
+
+async function onPoursIdle() {
+  busy = false;
+  if (tutorialStep) caption(t('tutorial2'));
+  else caption('');
+  renderBoosters();
+  markSelected();
+  if (sessionWon(session)) return win();
+  if (levelN <= 2 && tutorialStep) showHint(true);
+  if (sessionStuck(session)) {
+    await wait(300);
+    if (running.size === 0 && pending.length === 0 && !ended) stuck();
+  }
+}
+
+async function animatePour(job: PourJob) {
+  const { from, to, prev } = job;
+  const srcEl = jarEls[from]!;
+  const dstEl = jarEls[to]!;
+  const spice = SPICES[job.color]!;
+  // Sıra birikmişse daha hızlı.
+  const speed = pending.length > 2 ? 0.28 : pending.length > 0 ? 0.45 : 1;
+
   const appR = app.getBoundingClientRect();
+  srcEl.classList.remove('lifted', 'picked');
   const sR = srcEl.getBoundingClientRect();
   const dR = dstEl.getBoundingClientRect();
   const scale = sR.width / JAR_W;
-  const totalH = jarHeight(prevState.cap) + CORK_ROOM;
+  const totalH = jarHeight(prev.cap) + CORK_ROOM;
   const dir = dR.left + dR.width / 2 >= sR.left + sR.width / 2 ? 1 : -1;
   const theta = (dir * 72 * Math.PI) / 180;
-  const liftPx = srcEl.classList.contains('lifted') ? 14 : 0;
-  const centerS = { x: sR.left + sR.width / 2, y: sR.top + sR.height / 2 + liftPx };
-  const mouthD = (totalH / 2 - MOUTH_Y) * scale; // ağızın merkeze uzaklığı
+  const centerS = { x: sR.left + sR.width / 2, y: sR.top + sR.height / 2 };
+  const mouthD = (totalH / 2 - MOUTH_Y) * scale;
   const dstMouth = { x: dR.left + dR.width / 2, y: dR.top + MOUTH_Y * scale };
   const pourPoint = { x: dstMouth.x - dir * dR.width * 0.12, y: dstMouth.y - 22 * scale - 14 };
   const newCenter = {
@@ -383,25 +475,21 @@ async function doPour(from: number, to: number) {
   };
   const dx = newCenter.x - centerS.x;
   const dy = newCenter.y - centerS.y;
-  srcEl.classList.remove('lifted');
   srcEl.style.zIndex = '5';
-  const T1 = reduced ? 1 : 240;
   const anim = srcEl.animate(
     [
-      { transform: 'translate(0,-14px) rotate(0deg)' },
+      { transform: 'translate(0,-10px) rotate(0deg)' },
       { transform: `translate(${dx}px, ${dy}px) rotate(${dir * 72}deg)` },
     ],
-    { duration: T1, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' },
+    { duration: reduced ? 1 : 170 * speed, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' },
   );
   await anim.finished.catch(() => {});
 
-  // Akış + toz bulutu + katmanların değişmesi.
-  const pourMs = reduced ? 1 : 220 + result.amount * 90;
+  const pourMs = reduced ? 1 : (150 + job.amount * 70) * speed;
   sfxPour(spice.texture, pourMs / 1000 + 0.1);
   if (settings.haptics) vibrate(12);
   const surfaceY =
-    dR.top +
-    (CORK_ROOM + TOP + (prevState.cap - prevState.jars[to]!.layers.length) * LAYER_H) * scale;
+    dR.top + (CORK_ROOM + TOP + (prev.cap - prev.jars[to]!.layers.length) * LAYER_H) * scale;
   stream(
     pourPoint.x - appR.left,
     pourPoint.y - appR.top + 2,
@@ -410,8 +498,8 @@ async function doPour(from: number, to: number) {
     pourMs,
     scale,
   );
-  drawJar(from);
-  drawJar(to, { grown: result.amount, corkDrop: result.capped });
+  drawJar(from, {}, job.after);
+  drawJar(to, { grown: job.amount, corkDrop: job.capped }, job.after);
   await wait(pourMs);
   puff(dstMouth.x - appR.left, dstMouth.y - appR.top, spice.light, scale);
 
@@ -420,34 +508,23 @@ async function doPour(from: number, to: number) {
       { transform: `translate(${dx}px, ${dy}px) rotate(${dir * 72}deg)` },
       { transform: 'translate(0,0) rotate(0deg)' },
     ],
-    { duration: reduced ? 1 : 220, easing: 'cubic-bezier(.4,0,.2,1)' },
+    { duration: reduced ? 1 : 170 * speed, easing: 'cubic-bezier(.4,0,.2,1)' },
   );
   anim.cancel();
   await back.finished.catch(() => {});
   srcEl.style.zIndex = '';
 
-  for (const i of result.unlocked) {
-    drawJar(i);
+  for (const i of job.unlocked) {
+    drawJar(i, {}, job.after);
     jarEls[i]!.animate([{ filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }], {
       duration: 500,
     });
     sfxTink(1.4);
   }
-  if (result.capped) {
+  if (job.capped) {
     sfxCork();
     if (settings.haptics) vibrate([10, 40, 25]);
     sparkle(dR.left + dR.width / 2 - appR.left, dR.top + MOUTH_Y * scale - appR.top, spice.color);
-  }
-  if (tutorialStep) caption(t('tutorial2'));
-  else caption('');
-  renderBoosters();
-  busy = false;
-
-  if (sessionWon(session)) return win();
-  if (levelN <= 2 && tutorialStep) showHint(true);
-  if (sessionStuck(session)) {
-    await wait(350);
-    stuck();
   }
 }
 
@@ -762,7 +839,7 @@ function win() {
   sfxWin();
   if (settings.haptics) vibrate([20, 60, 20, 60, 40]);
   confetti();
-  setTimeout(() => showWinCard(r), reduced ? 200 : 900);
+  setTimeout(() => showWinCard(r), reduced ? 200 : 700);
 }
 
 /** Ödül ekranı kapanırken: interstitial kuralı, sonra sonraki seviye. */
@@ -1056,6 +1133,7 @@ const WOOD_URI = '__ASSET:wood_shelf.jpg__';
 const COUNTER_URI = '__ASSET:wood_counter.jpg__';
 const today = () => new Date().toLocaleDateString('sv');
 let viewShop = progress.activeShop;
+let focusItem: ItemId | null = null;
 
 function shopName(id: string) {
   return t(`shop_${id}` as never);
@@ -1077,15 +1155,13 @@ function openHome() {
   if (!isShopUnlocked(progress, cfg, viewShop)) viewShop = progress.activeShop;
   const shop = shops.find((x) => x.id === viewShop)!;
   const owned = ownedMap(shop.id);
+  const focus = focusItem;
+  focusItem = null;
   const count = Object.keys(owned).length;
   const idx = shops.findIndex((x) => x.id === shop.id);
   const prev = shops[idx - 1];
   const next = shops[idx + 1];
   const giftDay = nextGiftDay(progress, cfg, today());
-  const prices = Object.fromEntries(shop.items.map((it) => [it.id, it.price])) as Record<
-    ItemId,
-    number
-  >;
   const h = document.createElement('div');
   h.id = 'home';
   h.className = 'home';
@@ -1100,7 +1176,11 @@ function openHome() {
       <div class="shop-name"><span>${shopName(shop.id)}</span><small>${t('decorProgress', { n: count, m: shop.items.length })}${next && !isShopUnlocked(progress, cfg, next.id) ? ` · ${t('nextShopHint', { name: shopName(next.id) })}` : ''}</small></div>
       <button class="arrow" id="hNext" ${next && isShopUnlocked(progress, cfg, next.id) ? '' : 'disabled'} aria-label="›">›</button>
     </div>
-    <div class="stall" id="hStall">${stallSVG({ shop: shop.id, shopName: shopName(shop.id), owned, prices }, WOOD_URI, COUNTER_URI)}</div>
+    <div class="stall" id="hStall">${stallSVG({ shop: shop.id, shopName: shopName(shop.id), owned, focus }, WOOD_URI, COUNTER_URI)}</div>
+    <div class="decor">
+      <div class="decor-title">${t('decorate')}</div>
+      <div class="decor-row" id="hDecor">${decorCards(shop.id, owned)}</div>
+    </div>
     <div class="home-actions">
       <button class="btn primary play" id="hPlay"><span>${t('play')}</span><small>${t('level', { n: Math.min(BUILTIN_LEVELS.length, progress.unlocked) })}</small></button>
       <button class="btn plain" id="hMap">${t('levels')}</button>
@@ -1137,10 +1217,56 @@ function openHome() {
     const item = (e.target as Element)
       .closest('[data-item]')
       ?.getAttribute('data-item') as ItemId | null;
+    if (item && owned[item] !== undefined) openStyles(shop.id, item);
+  });
+  h.querySelector('#hDecor')!.addEventListener('click', (e) => {
+    unlock();
+    const item = (e.target as Element)
+      .closest('[data-item]')
+      ?.getAttribute('data-item') as ItemId | null;
     if (!item) return;
+    focusItem = item;
+    const stall = document.getElementById('hStall');
+    if (stall)
+      stall.innerHTML = stallSVG(
+        { shop: shop.id, shopName: shopName(shop.id), owned, focus: item },
+        WOOD_URI,
+        COUNTER_URI,
+      );
     if (owned[item] !== undefined) openStyles(shop.id, item);
     else void buyItem(shop.id, item);
   });
+  const row = h.querySelector<HTMLElement>('#hDecor')!;
+  try {
+    row.scrollLeft = Number(sessionStorage.getItem('decorScroll') ?? 0);
+  } catch {
+    // depolama yok
+  }
+  row.addEventListener('scroll', () => {
+    try {
+      sessionStorage.setItem('decorScroll', String(row.scrollLeft));
+    } catch {
+      // depolama yok
+    }
+  });
+}
+
+/** Dükkânın altındaki parça şeridi: alınmamışlar ucuzdan pahalıya önde, alınanlar sonda. */
+function decorCards(shop: string, owned: Partial<Record<ItemId, number>>) {
+  const items = cfg.economy.shops.find((x) => x.id === shop)!.items;
+  const sorted = [...items].sort((a, b) => {
+    const oa = owned[a.id as ItemId] !== undefined ? 1 : 0;
+    const ob = owned[b.id as ItemId] !== undefined ? 1 : 0;
+    return oa - ob || a.price - b.price;
+  });
+  return sorted
+    .map((it) => {
+      const id = it.id as ItemId;
+      const has = owned[id] !== undefined;
+      const afford = progress.coins >= it.price;
+      return `<button class="decor-card${has ? ' owned' : afford ? ' afford' : ''}" data-item="${id}">${styleSwatch(id, has ? owned[id]! : 0, shopName(shop), WOOD_URI, COUNTER_URI)}<span class="dn">${t(`item_${id}` as never)}</span>${has ? `<span class="dp ok">✓</span>` : `<span class="dp"><i></i>${it.price}</span>`}</button>`;
+    })
+    .join('');
 }
 
 function refreshHomeCoins() {
@@ -1159,6 +1285,7 @@ function celebrateItem(item: ItemId) {
 }
 
 async function buyItem(shop: string, item: ItemId) {
+  focusItem = null;
   const price = cfg.economy.shops
     .find((s) => s.id === shop)!
     .items.find((i) => i.id === item)!.price;
@@ -1204,6 +1331,7 @@ async function buyItem(shop: string, item: ItemId) {
 }
 
 function openStyles(shop: string, item: ItemId) {
+  focusItem = null;
   const key = itemKey(shop, item);
   const own = progress.owned[key]!;
   const price = stylePrice(cfg, shop, item)!;

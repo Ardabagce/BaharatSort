@@ -3,6 +3,7 @@ export type Lang = 'tr' | 'en';
 const tr = {
   home: 'Dükkân',
   play: 'Oyna',
+  decorate: 'Dükkânı süsle',
   toShop: 'Dükkâna dön',
   dailyGift: 'Günlük hediye',
   bannerMock: 'Banner reklam alanı (simülasyon)',
@@ -148,6 +149,7 @@ export type StringKey = keyof typeof tr;
 const en: Record<StringKey, string> = {
   home: 'Shop',
   play: 'Play',
+  decorate: 'Decorate your shop',
   toShop: 'Back to the shop',
   dailyGift: 'Daily gift',
   bannerMock: 'Banner ad slot (simulated)',

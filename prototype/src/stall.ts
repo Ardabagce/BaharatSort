@@ -169,6 +169,40 @@ const ART: Record<ItemId, (style: number, ctx: { name: string }) => string> = {
   },
 };
 
+/**
+ * Alınmamış parçanın sade hâli: dükkân başta da eksiksiz ama mütevazı görünsün. Bazı parçaların
+ * sade hâli yok (terazi, vitrin, kilim, kedi yatağı): alınana kadar yerleri boş kalır.
+ */
+const BASIC: Partial<Record<ItemId, (c: { name: string }) => string>> = {
+  sign: (c) =>
+    `<rect x="96" y="12" width="208" height="38" rx="3" fill="#5c4a38" stroke="#3a2a1c" stroke-width="2"/><text x="200" y="38" text-anchor="middle" font-family="Rakkas, Georgia, serif" font-size="19" fill="#e8dcc4" opacity=".85">${c.name}</text><path d="M130 50v16M270 50v16" stroke="#2a170d" stroke-width="2"/>`,
+  shelves: () =>
+    [150, 210]
+      .map(
+        (y) =>
+          `<rect x="66" y="${y}" width="268" height="7" fill="#5a4a3c"/><rect x="66" y="${y + 7}" width="268" height="4" fill="#000" opacity=".3"/>`,
+      )
+      .join(''),
+  jarSet: () => {
+    const cols = ['#d3352b', '#f2c12e', '#3d6a2c', '#8b5330', '#262220'];
+    return cols
+      .map(
+        (c, k) =>
+          `<rect x="${92 + k * 46}" y="122" width="22" height="28" rx="4" fill="rgba(255,240,215,.12)" stroke="rgba(255,240,215,.45)"/><rect x="${94 + k * 46}" y="134" width="18" height="14" rx="2" fill="${c}" opacity=".85"/>`,
+      )
+      .join('');
+  },
+  lamps: () =>
+    `<line x1="200" y1="66" x2="200" y2="100" stroke="#2a170d" stroke-width="1.4"/><circle cx="200" cy="112" r="26" fill="url(#stGlow)" opacity=".7"/><circle cx="200" cy="108" r="7" fill="#fff3d0"/><rect x="196" y="98" width="8" height="5" fill="#6b5844"/>`,
+  counter: () =>
+    `<rect x="48" y="300" width="304" height="10" fill="#6b5240"/>${[0, 1, 2]
+      .map(
+        (k) =>
+          `<rect x="${52 + k * 101}" y="310" width="96" height="92" fill="#5b4130" stroke="#3a2a1c" stroke-width="2"/><path d="M${52 + k * 101} 340h96M${52 + k * 101} 372h96" stroke="#3a2a1c" stroke-width="1.5"/>`,
+      )
+      .join('')}`,
+};
+
 /** Ana menüdeki uyuyan kedi (yatak varsa üstünde). */
 function cat(onBed: boolean) {
   const y = onBed ? 396 : 410;
@@ -180,7 +214,8 @@ export interface StallState {
   shopName: string;
   /** Parça → seçili stil (alınmamışsa yok). */
   owned: Partial<Record<ItemId, number>>;
-  prices: Record<ItemId, number>;
+  /** Yeri parlatılan parça (şeritte dokunulan). */
+  focus?: ItemId | null;
 }
 
 export function stallSVG(st: StallState, woodUri: string, counterUri: string): string {
@@ -188,16 +223,15 @@ export function stallSVG(st: StallState, woodUri: string, counterUri: string): s
   const has = (id: ItemId) => st.owned[id] !== undefined;
   const part = (id: ItemId) => {
     const style = st.owned[id];
-    if (style === undefined)
-      return `<g class="ghost" data-item="${id}" opacity=".16" style="filter:grayscale(1)">${ART[id](0, { name: st.shopName })}</g>`;
+    if (style === undefined) {
+      const basic = BASIC[id];
+      return basic ? `<g class="basic">${basic({ name: st.shopName })}</g>` : '';
+    }
     return `<g class="part" data-item="${id}">${ART[id](style, { name: st.shopName })}</g>`;
   };
-  const tags = ITEM_ORDER.filter((id) => !has(id))
-    .map((id) => {
-      const [x, y] = ANCHORS[id];
-      return `<g class="tag" data-item="${id}" transform="translate(${x} ${y})"><rect x="-27" y="-13" width="54" height="26" rx="13" fill="#2a170d" stroke="#e6b85a" stroke-width="1.5"/><circle cx="-13" cy="0" r="7" fill="#e6b85a" stroke="#8d6220"/><text x="7" y="5" text-anchor="middle" font-size="13" font-weight="800" fill="#ffe3a0" font-family="Alegreya Sans, sans-serif">${st.prices[id]}</text></g>`;
-    })
-    .join('');
+  const focus = st.focus
+    ? `<g class="focus" transform="translate(${ANCHORS[st.focus][0]} ${ANCHORS[st.focus][1]})"><circle r="34" fill="rgba(255,196,107,.18)" stroke="#ffc46b" stroke-width="2.5" stroke-dasharray="7 5"/></g>`
+    : '';
   return `<svg viewBox="0 0 400 450" class="stall-svg" role="img" aria-label="${st.shopName}">
 <defs>
 <pattern id="stWood" patternUnits="userSpaceOnUse" width="200" height="50"><image href="${woodUri}" width="200" height="50" preserveAspectRatio="none"/></pattern>
@@ -210,7 +244,7 @@ export function stallSVG(st: StallState, woodUri: string, counterUri: string): s
 <path d="M38 440V120a162 110 0 0 1 324 0V440" fill="none" stroke="#2a170d" stroke-width="2" stroke-dasharray="14 10" opacity=".35"/>
 <rect x="0" y="430" width="400" height="20" fill="${tone.floor}"/>
 ${part('shelves')}${part('jarSet')}${part('lamps')}${part('counter')}${part('rug')}${part('vitrine')}${part('scale')}${part('catBed')}${cat(has('catBed'))}${part('sign')}
-${tags}
+${focus}
 </svg>`;
 }
 

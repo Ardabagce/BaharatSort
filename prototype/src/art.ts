@@ -88,14 +88,16 @@ export function jarSVG(jar: Jar, cap: number, o: JarDrawOpts): string {
   for (let i = 0; i < n; i++) {
     const c = jar.layers[i]!;
     const y = yB - (i + 1) * LAYER_H;
+    // En alt katman camın kavisli dibine kadar iner (yoksa altta ince bir boşluk kalıyordu).
+    const h = LAYER_H + (i === 0 ? 6 : 0.6);
     const hidden = i < jar.hidden;
     const grow = o.grown && i >= n - o.grown ? ' class="grow"' : '';
     if (hidden) {
-      layers += `<g${grow}><rect x="6" y="${y}" width="52" height="${LAYER_H + 0.6}" fill="#5a4334"/><path d="M8 ${y + 4}h48M8 ${y + 12}h48" stroke="#6f5443" stroke-width="1"/><text x="32" y="${y + 15}" text-anchor="middle" font-size="14" font-weight="800" fill="#e6d2b0" font-family="Alegreya Sans, sans-serif">?</text></g>`;
+      layers += `<g${grow}><rect x="5" y="${y}" width="54" height="${h}" fill="#5a4334"/><path d="M8 ${y + 4}h48M8 ${y + 12}h48" stroke="#6f5443" stroke-width="1"/><text x="32" y="${y + 15}" text-anchor="middle" font-size="14" font-weight="800" fill="#e6d2b0" font-family="Alegreya Sans, sans-serif">?</text></g>`;
       continue;
     }
     const s = SPICES[c]!;
-    let g = `<rect x="6" y="${y}" width="52" height="${LAYER_H + 0.6}" fill="url(#tex${c})"/>`;
+    let g = `<rect x="5" y="${y}" width="54" height="${h}" fill="url(#tex${c})"/>`;
     // Katman sınırında hafif gölge, en üstte kavisli yüzey.
     g += `<rect x="6" y="${y + LAYER_H - 2}" width="52" height="2" fill="${s.shade}" opacity="0.35"/>`;
     if (i === n - 1)
@@ -115,7 +117,7 @@ export function jarSVG(jar: Jar, cap: number, o: JarDrawOpts): string {
       : '';
   return `<svg viewBox="0 ${-CORK_ROOM} ${JAR_W} ${H + CORK_ROOM}" aria-hidden="true">
 <ellipse cx="32" cy="${yB + 6}" rx="27" ry="3.5" fill="#000" opacity="0.35"/>
-<defs><clipPath id="${clipId}"><path d="M6 ${TOP - 4} H58 V${yB - 2} Q58 ${yB + 4} 50 ${yB + 4} H14 Q6 ${yB + 4} 6 ${yB - 2}Z"/></clipPath></defs>
+<defs><clipPath id="${clipId}"><path d="M5.2 ${TOP - 4} H58.8 V${yB - 2} Q58.8 ${yB + 5.2} 50 ${yB + 5.2} H14 Q5.2 ${yB + 5.2} 5.2 ${yB - 2}Z"/></clipPath></defs>
 <path d="${body}Z" fill="rgba(255,240,215,0.10)"/>
 <g clip-path="url(#${clipId})">${layers}</g>
 <path class="glass" d="${body}" fill="none" stroke="rgba(255,240,215,0.6)" stroke-width="2.2" stroke-linejoin="round"/>

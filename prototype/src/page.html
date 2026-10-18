@@ -316,8 +316,12 @@
   .jar.lifted {
     transform: translateY(-14px);
   }
-  .jar.lifted .glass {
+  .jar.lifted .glass,
+  .jar.picked .glass {
     stroke: var(--glow);
+  }
+  .jar.picked .glass {
+    stroke-width: 3.2;
   }
   .jar.hint-src .glass,
   .jar.hint-dst .glass {
@@ -725,7 +729,7 @@
     inset: 0;
     z-index: 15;
     display: grid;
-    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
     gap: 6px;
     padding: 10px max(14px, env(safe-area-inset-right, 0px))
       max(8px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
@@ -816,12 +820,86 @@
   .stall-svg .part {
     cursor: pointer;
   }
-  .stall-svg .tag {
-    animation: tagbob 2.4s ease-in-out infinite;
+  .decor {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
   }
-  @keyframes tagbob {
+  .decor-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .decor-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .decor-row::-webkit-scrollbar {
+    display: none;
+  }
+  .decor-card {
+    flex: none;
+    width: 86px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 5px 6px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(214, 162, 74, 0.3);
+    background: rgba(20, 10, 5, 0.6);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .decor-card .swatch-svg {
+    border-radius: 9px;
+  }
+  .decor-card.afford {
+    border-color: var(--glow);
+    box-shadow: 0 0 0 2px rgba(255, 196, 107, 0.25);
+  }
+  .decor-card.owned {
+    opacity: 0.7;
+  }
+  .decor-card .dn {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .decor-card .dp {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--glow);
+    font-variant-numeric: tabular-nums;
+  }
+  .decor-card .dp i {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffe3a0, #c9953b);
+    border: 1px solid #8d6220;
+  }
+  .decor-card .dp.ok {
+    color: var(--leaf);
+  }
+  .stall-svg .focus circle {
+    animation: focusPulse 1.2s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  @keyframes focusPulse {
     50% {
-      translate: 0 -3px;
+      transform: scale(1.12);
+      opacity: 0.6;
     }
   }
   .home-actions {
@@ -1128,7 +1206,7 @@
     .hint-src,
     .boost.glow,
     .gift-btn,
-    .stall-svg .tag,
+    .stall-svg .focus circle,
     .node.cur {
       animation: none !important;
     }
