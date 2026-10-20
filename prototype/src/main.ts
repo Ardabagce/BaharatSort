@@ -42,6 +42,7 @@ import {
   sessionHint,
   sessionPour,
   sessionShuffle,
+  sessionNoMoves,
   sessionStuck,
   sessionUndo,
   sessionWon,
@@ -178,6 +179,8 @@ function startLevel(n: number) {
   pending.length = 0;
   running.clear();
   busy = false;
+  deadEndMoves = 0;
+  deadEndRecorded = false;
   if (document.getElementById('home') && inApp) postHost({ type: 'banner', visible: false });
   document.getElementById('home')?.remove();
   app.scrollLeft = 0;
@@ -490,11 +493,27 @@ async function onPoursIdle() {
   markSelected();
   if (sessionWon(session)) return win();
   if (levelN <= 2 && tutorialStep) showHint(true);
-  if (sessionStuck(session)) {
+  if (sessionNoMoves(session)) {
+    // Gerçekten dökülecek yer kalmadı: "Son bir şans".
     await wait(300);
     if (running.size === 0 && pending.length === 0 && !ended) stuck();
-  }
+  } else if (sessionStuck(session)) {
+    // Çıkmaz ama hamle var: oyun kesilmez (oyuncu gizli katmanları bilmeden denemeye devam edebilir).
+    // Karıştır açılır ve parlar; birkaç hamle sonra küçük bir not çıkar.
+    if (!deadEndRecorded) {
+      deadEndRecorded = true;
+      progress = recordStuck(progress, cfg, levelN);
+      persist();
+    }
+    deadEndMoves++;
+    if (deadEndMoves >= DEAD_END_NOTE_AFTER) caption(t('deadEnd'));
+  } else deadEndMoves = 0;
 }
+
+/** Çıkmazda notu göstermeden önce oyuncunun deneyebileceği hamle sayısı. */
+const DEAD_END_NOTE_AFTER = 6;
+let deadEndMoves = 0;
+let deadEndRecorded = false;
 
 async function animatePour(job: PourJob) {
   const { from, to, prev } = job;
@@ -1076,7 +1095,8 @@ function showWinCard(r: { first: boolean; base: number; bonus: number }) {
 function stuck() {
   if (ended) return;
   ended = true;
-  progress = recordStuck(progress, cfg, levelN);
+  if (!deadEndRecorded) progress = recordStuck(progress, cfg, levelN);
+  deadEndRecorded = true;
   persist();
   renderBoosters();
   if (settings.haptics) vibrate([30, 50, 30]);

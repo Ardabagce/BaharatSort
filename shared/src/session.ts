@@ -3,6 +3,7 @@ import {
   addEmptyJar,
   createGame,
   isStuck,
+  meaningfulMoves,
   isWon,
   pour,
   shuffleJars,
@@ -108,3 +109,9 @@ export function sessionHint(s: Session): Move | null {
 
 export const sessionWon = (s: Session) => isWon(s.state);
 export const sessionStuck = (s: Session) => isStuck(s.state);
+/**
+ * Gerçekten hiç hamle kalmadı (oyuncu da göremediği hiçbir şey denemez). "Son bir şans" ekranı yalnızca
+ * bu durumda açılır; hamle varken çıkmaz (`sessionStuck`) oyunu kesmez, yalnızca karıştırı açar.
+ */
+export const sessionNoMoves = (s: Session) =>
+  !isWon(s.state) && meaningfulMoves(s.state).length === 0;
