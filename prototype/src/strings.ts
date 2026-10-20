@@ -88,6 +88,9 @@ const tr = {
   stuckTitle: 'Son bir şans',
   stuckBody: 'Dökülecek yer kalmadı. Bir boş kavanoz her şeyi değiştirebilir.',
   deadEnd: 'Bu dizilimden çıkış yok gibi: geri al ya da karıştır.',
+  deadEndBody:
+    'Bu dizilimden çıkış yok: hiçbir kavanoz artık dolamaz. Bir boş kavanoz, karıştırmak ya da geri almak işe yarar.',
+  keepTrying: 'Denemeye devam et',
   stuckAd: 'Reklam izle · +1 boş kavanoz',
   stuckShuffle: 'Karıştır',
   stuckUndo: 'Geri al',
@@ -237,6 +240,9 @@ const en: Record<StringKey, string> = {
   stuckTitle: 'One last chance',
   stuckBody: 'No pour is left. One empty jar can change everything.',
   deadEnd: 'This looks like a dead end: undo or shuffle.',
+  deadEndBody:
+    'There is no way out from here: no jar can be filled any more. An empty jar, a shuffle or an undo will help.',
+  keepTrying: 'Keep trying',
   stuckAd: 'Watch an ad · +1 empty jar',
   stuckShuffle: 'Shuffle',
   stuckUndo: 'Undo',

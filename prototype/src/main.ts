@@ -181,6 +181,7 @@ function startLevel(n: number) {
   busy = false;
   deadEndMoves = 0;
   deadEndRecorded = false;
+  deadEndShown = false;
   if (document.getElementById('home') && inApp) postHost({ type: 'banner', visible: false });
   document.getElementById('home')?.remove();
   app.scrollLeft = 0;
@@ -506,12 +507,26 @@ async function onPoursIdle() {
       persist();
     }
     deadEndMoves++;
-    if (deadEndMoves >= DEAD_END_NOTE_AFTER) caption(t('deadEnd'));
-  } else deadEndMoves = 0;
+    if (deadEndMoves >= DEAD_END_SCREEN_AFTER && !deadEndShown) {
+      // Birkaç deneme hakkı verildi: oyuncuya açıkça söyle, seçenekleri sun (devam da edebilir).
+      deadEndShown = true;
+      await wait(300);
+      if (running.size === 0 && pending.length === 0 && !ended) stuck(true);
+    } else if (deadEndMoves >= DEAD_END_NOTE_AFTER) caption(t('deadEnd'));
+  } else {
+    deadEndMoves = 0;
+    deadEndShown = false;
+  }
 }
 
-/** Çıkmazda notu göstermeden önce oyuncunun deneyebileceği hamle sayısı. */
+/**
+ * Çıkmaz (hamle var ama hiçbir kavanoz artık kapanamaz): oyuncu çıkmaza giren hamleyle birlikte 3 hamle
+ * dener, sonra "Bu dizilimden çıkış yok" ekranı açılır ("Denemeye devam et" ile kapatılabilir). Devam
+ * ederse 6. hamleden sonra altta kısa bir not kalır.
+ */
+const DEAD_END_SCREEN_AFTER = 3;
 const DEAD_END_NOTE_AFTER = 6;
+let deadEndShown = false;
 let deadEndMoves = 0;
 let deadEndRecorded = false;
 
@@ -1092,7 +1107,7 @@ function showWinCard(r: { first: boolean; base: number; bonus: number }) {
   v.querySelector('#wNext')!.addEventListener('click', () => void goNextLevel());
 }
 
-function stuck() {
+function stuck(canContinue = false) {
   if (ended) return;
   ended = true;
   if (!deadEndRecorded) progress = recordStuck(progress, cfg, levelN);
@@ -1102,13 +1117,19 @@ function stuck() {
   if (settings.haptics) vibrate([30, 50, 30]);
   const sh = progress.boosters.shuffle;
   const v = veil(`<div class="card">
-    <h2>${t('stuckTitle')}</h2><p>${t('stuckBody')}</p>
+    <h2>${t('stuckTitle')}</h2><p>${t(canContinue ? 'deadEndBody' : 'stuckBody')}</p>
     <div class="stack">
       ${ADS ? `<button class="btn ad" id="sAd">${t('stuckAd')}</button>` : ''}
       <button class="btn primary" id="sShuffle">${t('stuckShuffle')} <small>· ${sh > 0 ? sh : `${cfg.economy.boosterPrice.shuffle} ${t('gold')}`}</small></button>
       <button class="btn plain" id="sUndo" ${canUndo(session) ? '' : 'disabled'}>${t('stuckUndo')} <small>· ${progress.boosters.undo > 0 ? progress.boosters.undo : `${cfg.economy.boosterPrice.undo} ${t('gold')}`}</small></button>
       <button class="btn plain" id="sRestart">${t('restart')}</button>
+      ${canContinue ? `<button class="btn plain" id="sGo">${t('keepTrying')}</button>` : ''}
     </div></div>`);
+  v.querySelector('#sGo')?.addEventListener('click', () => {
+    closeVeil();
+    ended = false;
+    renderBoosters();
+  });
   v.querySelector('#sAd')?.addEventListener('click', async () => {
     closeVeil();
     const r = await rewardedAd();
@@ -1118,13 +1139,13 @@ function stuck() {
     } else {
       if (r === 'unavailable') toast(t('noAd'));
       ended = false;
-      stuck();
+      stuck(canContinue);
     }
   });
   const viaBooster = (k: BoosterKind) => async () => {
     closeVeil();
     ended = false;
-    if (!(await tryBooster(k))) stuck();
+    if (!(await tryBooster(k))) stuck(canContinue);
   };
   v.querySelector('#sShuffle')!.addEventListener('click', viaBooster('shuffle'));
   v.querySelector('#sUndo')!.addEventListener('click', viaBooster('undo'));
